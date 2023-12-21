@@ -21,7 +21,7 @@ sig_atomic_t sigFlagStop = 0;
 void signal_handler(int iSignal);
 void signal_handler(int iSignal) {
 
-  switch (iSignal) {
+switch (iSignal) {
 
   case SIGINT:
     sigFlagStop = -1;
@@ -106,6 +106,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
     0x10
   };
   
+
   char clearScreen[2] = {0xFF, 0xD7};
   union buffer dataToReceive;
   union buffer data;
@@ -123,6 +124,8 @@ int main(int iArgCount, char * apstrArgValue[]) {
   };
   struct termios termiosOled;
   
+  struct termios termiosOledInit;
+  
   
   int x = 0;
 
@@ -131,6 +134,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
   //signal(SIGINT,signal_handler);
   signal(SIGALRM, signal_handler);
+  signal(SIGINT, signal_handler);
 
 
   // init buttons
@@ -151,11 +155,9 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
   // get back current config
   iVerif = tcgetattr(oledScreen.m_iDescIo, & termiosOled);
+  termiosOledInit = termiosOled;
   if (iVerif == 0) {
 
-    // manual config
-    // put default setup (merguez)
-    cfmakeraw( & termiosOled);
 
     // ignore signals of terminals
     termiosOled.c_iflag &= ~CLOCAL;
@@ -164,15 +166,19 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
     // block mode
     iVerif = fcntl(oledScreen.m_iDescIo, F_SETFL, ~O_NONBLOCK);
+    
+    // manual config
+    // put default setup (merguez)
+    cfmakeraw( & termiosOled);
 
     // set parameter
     termiosOled.c_cflag &= ~(CSTOPB);
+    
+    cfsetispeed( & termiosOled, B9600);
+    cfsetospeed( & termiosOled, B9600);
 
     // set profile	a second time
     iVerif = tcsetattr(oledScreen.m_iDescIo, TCSANOW, & termiosOled);
-
-    cfsetispeed( & termiosOled, B9600);
-    cfsetospeed( & termiosOled, B9600);
 
   }
 
@@ -196,7 +202,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
       close(a2iFdPipe[0]);
 
       int temp = 0;
-      while (1) {
+      while (sigFlagStop != -1) {
         poll( & gpioButton1.m_pollfd[1], 1, 100);
         poll( & gpioButton1.m_pollfd[0], 1, 100);
         if (gpioButton1.m_pollfd[1].revents == gpioButton1.m_pollfd[1].events) {
@@ -225,22 +231,22 @@ int main(int iArgCount, char * apstrArgValue[]) {
         }
         
       }
+      close(gpioButton1.m_DevChar.m_iDescIo);
       close(a2iFdPipe[1]);
       break;
 
       // écran OLED
     default: // Pere
       close(a2iFdPipe[1]);
-      while (1) {
+      while (sigFlagStop != -1) {
         /*iResult = read(a2iFdPipe[1],&strMessage, 7);   
         fprintf(stdout,"%s\n",strMessage);*/
-        oldSeconds = (difftime(time( NULL ), 0 ));
-        for (int i = 0; i < 2; i++) {
-          write(oledScreen.m_iDescIo, & clearScreen[i], sizeof(clearScreen[i]));
-        }
+        write(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
+        usleep(25000);
         int returnVAlue = read(oledScreen.m_iDescIo, & response, sizeof(response));
         printf("Etat read : %i\n",returnVAlue);
         printf("Reponse : %c\n",response);
+        /*
 
         for (int i = 0; i < 12; i++) {
           write(oledScreen.m_iDescIo, & BufferTableCircle[i], sizeof(BufferTable[i]));
@@ -256,11 +262,14 @@ int main(int iArgCount, char * apstrArgValue[]) {
         printf("sheesh\n");
         
         
-        while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}
-      }
+        while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}*/
     }
+    printf("fin");
     wait( & iResult);
+    tcsetattr(oledScreen.m_iDescIo, TCSANOW, & termiosOledInit);
+    close(oledScreen.m_iDescIo);
     close(a2iFdPipe[0]);
+  }
   }
   //BufferTableCircle[12]	
 
