@@ -77,7 +77,9 @@ int main(int iArgCount, char * apstrArgValue[]) {
   char strMessage[] = "message";
   char strMessageRecu[7];
   
-  char response;
+  int response;
+  int returnVAlue;
+  int nbrOctSent;
 
   char BufferTable[12] = {
     0xff,
@@ -151,7 +153,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
     gpioButton1.m_pollfd[iBcl2].fd = gpioButton1.m_event_request[iBcl2].fd;
     gpioButton1.m_pollfd[iBcl2].events = POLLIN;
   }
-  alarm(5);
+  //alarm(5);
 
   // get back current config
   iVerif = tcgetattr(oledScreen.m_iDescIo, & termiosOled);
@@ -241,28 +243,29 @@ int main(int iArgCount, char * apstrArgValue[]) {
       while (sigFlagStop != -1) {
         /*iResult = read(a2iFdPipe[1],&strMessage, 7);   
         fprintf(stdout,"%s\n",strMessage);*/
-        write(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
-        usleep(25000);
-        int returnVAlue = read(oledScreen.m_iDescIo, & response, sizeof(response));
-        printf("Etat read : %i\n",returnVAlue);
-        printf("Reponse : %c\n",response);
-        /*
-
-        for (int i = 0; i < 12; i++) {
-          write(oledScreen.m_iDescIo, & BufferTableCircle[i], sizeof(BufferTable[i]));
-        }
+        nbrOctSent = write(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
+        usleep(500000);
+        returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+        printf("Nbr octets envoyés : %i\n",nbrOctSent);
+        printf("Nbr octets recu : %i\n",returnVAlue);
+        printf("Reponse : %i\n",response);
         
-        if(BufferTableCircle[4] != 0){
-          BufferTableCircle[4] = BufferTableCircle[4]- 10;
+
+        nbrOctSent = write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
+        usleep(500000);
+        returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+        printf("Etat read : %i\n",returnVAlue);
+        printf("Reponse : %i\n",response);
+        
+        if(BufferTableCircle[4] != 127){
+          BufferTableCircle[4] = BufferTableCircle[4] + 1;
         }
         else{
-          BufferTableCircle[4] = 255;
+          BufferTableCircle[4] = 0;
         }
         
-        printf("sheesh\n");
         
-        
-        while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}*/
+        //while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}
     }
     printf("fin");
     wait( & iResult);
