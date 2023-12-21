@@ -23,9 +23,9 @@ INSTOWNER = geii
 INSTGROUP = geii
 
 # SRCR : list of C source code for compiler 
-SRCS	= prjOled.c
+SRCS	= prjOled.c libraryPrj.c readPrgm.c
 # OBJS : list of objet code for linker
-OBJS	= prjOled.o
+OBJS	= prjOled.o libraryPrj.o readPrgm.o
 
 all:	$(PROGS)
 
@@ -52,5 +52,7 @@ depend:
 # DO NOT DELETE
 prjOled.o: prjOled.h
 
+libraryPrj.o: prjOled.h
 
+readPrgm.o: prjOled.h
 
