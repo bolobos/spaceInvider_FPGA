@@ -95,21 +95,45 @@ int main(int iArgCount, char * apstrArgValue[]) {
     0xF8,
     0x11
   };
+  
+  // rayon : 6
   char BufferTableCircle[12] = {
     0xFF,
     0xCC,
     0x00,
-    0x2D,
+    0x07,
     0x00,
-    0x28,
+    0x78,
     0x00,
-    0x23,
+    0x06,
     0x84,
     0x10
+  };
+   char BufferTableCircleBlack[12] = {
+    0xFF,
+    0xCC,
+    0x00,
+    0x07,
+    0x00,
+    0x78,
+    0x00,
+    0x06,
+    0x00,
+    0x00
+  };
+  
+  char blackRectangle[12] = {
+   0xFF, 0xCE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7F, 0x00, 0x7F, 0x00, 0x00
   };
   
 
   char clearScreen[2] = {0xFF, 0xD7};
+  char setBaudRate[] = {0x00, 0x0B, 0x00, 0x19};
+  
+  int buttonsState = 5;
+  int buttonsStateReceive = 5;
+
+  int x = 75;
   union buffer dataToReceive;
   union buffer data;
   memset( & dataToReceive, 0, 2);
@@ -117,19 +141,19 @@ int main(int iArgCount, char * apstrArgValue[]) {
     .m_strPathDev = "/dev/ttyAL0",
     .m_iDescIo = -1,
   };
-  // Buttons on Falling Edge (o x x o)												
-  struct TDeviceCharGpIO gpioButton1 = {
-    .m_DevChar = {
-      .m_iDescIo = -1,
-      .m_strPathDev = "/dev/gpiochip2",
-    },
-  };
+
+	
+	// Buttons on Both Edges (x o o x)							
+	struct TDeviceCharGpIO gpioButton1 	= 	{	.m_DevChar	= {	.m_iDescIo 		= -1,
+																					.m_strPathDev 	= "/dev/gpiochip3", },
+														};	
+  
+  
   struct termios termiosOled;
   
   struct termios termiosOledInit;
   
   
-  int x = 0;
 
   oledScreen.m_iDescIo = open(oledScreen.m_strPathDev, (O_RDWR | O_NONBLOCK));
   gpioButton1.m_DevChar.m_iDescIo = open(gpioButton1.m_DevChar.m_strPathDev, O_RDWR);
@@ -148,7 +172,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
   for (int iBcl2 = 0; iBcl2 <= 1; iBcl2++) {
     gpioButton1.m_event_request[iBcl2].lineoffset = iBcl2;
     gpioButton1.m_event_request[iBcl2].handleflags = GPIOHANDLE_REQUEST_INPUT;
-    gpioButton1.m_event_request[iBcl2].eventflags = GPIOEVENT_REQUEST_FALLING_EDGE;
+    gpioButton1.m_event_request[iBcl2].eventflags = GPIOEVENT_REQUEST_BOTH_EDGES;
     ioctl(gpioButton1.m_DevChar.m_iDescIo, GPIO_GET_LINEEVENT_IOCTL, & gpioButton1.m_event_request[iBcl2]);
     gpioButton1.m_pollfd[iBcl2].fd = gpioButton1.m_event_request[iBcl2].fd;
     gpioButton1.m_pollfd[iBcl2].events = POLLIN;
@@ -176,11 +200,19 @@ int main(int iArgCount, char * apstrArgValue[]) {
     // set parameter
     termiosOled.c_cflag &= ~(CSTOPB);
     
-    cfsetispeed( & termiosOled, B9600);
+    /*cfsetispeed( & termiosOled, B9600);
+    cfsetospeed( & termiosOled, B9600);*/
+    cfsetispeed( & termiosOled, B115200);
     cfsetospeed( & termiosOled, B9600);
+   nbrOctSent = write(oledScreen.m_iDescIo, & setBaudRate, sizeof(setBaudRate));
+   usleep(50000);
+   returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+   fprintf(stdout, "Return value : %i\n",returnVAlue);
+   cfsetospeed( & termiosOled, B115200);
 
     // set profile	a second time
     iVerif = tcsetattr(oledScreen.m_iDescIo, TCSANOW, & termiosOled);
+     
 
   }
 
@@ -207,68 +239,100 @@ int main(int iArgCount, char * apstrArgValue[]) {
       while (sigFlagStop != -1) {
         poll( & gpioButton1.m_pollfd[1], 1, 100);
         poll( & gpioButton1.m_pollfd[0], 1, 100);
+        
         if (gpioButton1.m_pollfd[1].revents == gpioButton1.m_pollfd[1].events) {
-
           read(gpioButton1.m_event_request[1].fd, & (gpioButton1.m_event_data[1]), sizeof(gpioButton1.m_event_data[1]));
+          fprintf(stdout,"Bouton 1\n");
           if (temp == 0) {
             temp = 1;
-            printf("Bouton 1\n");
+            buttonsState = 0;
           } else {
             temp = 0;
 
-            printf("Bouton 1\n");
+            buttonsState = 1;
           }
         }
+        
         if (gpioButton1.m_pollfd[0].revents == gpioButton1.m_pollfd[0].events) {
-
           read(gpioButton1.m_event_request[0].fd, & (gpioButton1.m_event_data[0]), sizeof(gpioButton1.m_event_data[0]));
+          fprintf(stdout,"Bouton 2\n");
           if (temp == 0) {
             temp = 1;
-            printf("Bouton 2\n");
+            buttonsState = 2;
           } else {
             temp = 0;
 
-            printf("Bouton 2\n");
+            buttonsState = 3;
           }
         }
+        
+        //fprintf(stdout,"Send : %i\n",buttonsState);
+        
+        write(a2iFdPipe[1],&buttonsState,1); 
         
       }
       close(gpioButton1.m_DevChar.m_iDescIo);
       close(a2iFdPipe[1]);
       break;
 
+////////////////////////////////////////////////////////////////////////////////////////////
+
       // écran OLED
     default: // Pere
+    
+    // clear screen
       close(a2iFdPipe[1]);
-      while (sigFlagStop != -1) {
-        /*iResult = read(a2iFdPipe[1],&strMessage, 7);   
-        fprintf(stdout,"%s\n",strMessage);*/
-        nbrOctSent = write(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
-        usleep(500000);
-        returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
-        printf("Nbr octets envoyés : %i\n",nbrOctSent);
-        printf("Nbr octets recu : %i\n",returnVAlue);
-        printf("Reponse : %i\n",response);
-        
+      int tempMove = 1;
+      
 
-        nbrOctSent = write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
-        usleep(500000);
-        returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
-        printf("Etat read : %i\n",returnVAlue);
-        printf("Reponse : %i\n",response);
+      while (sigFlagStop != -1) {
+      
+        iResult = read(a2iFdPipe[0],&buttonsStateReceive, 1); 
+        //fprintf(stdout,"Receive : %i\n",buttonsStateReceive);
         
-        if(BufferTableCircle[4] != 127){
-          BufferTableCircle[4] = BufferTableCircle[4] + 1;
+        if((buttonsStateReceive == 0) && (x > 12)){
+            x = x - 6;
+            tempMove = 1 ;
+        }
+        else if((buttonsStateReceive == 2) && (x < 116)){
+            x = x + 6;
+            tempMove = 1 ;
         }
         else{
-          BufferTableCircle[4] = 0;
-        }
+            tempMove = 0 ;
+        }          
+        
+        BufferTableCircle[3] = x;
+        
+
+        
+         if(tempMove == 1 ){
+            nbrOctSent = write(oledScreen.m_iDescIo, & blackRectangle, sizeof(blackRectangle));
+            usleep(7000);
+            returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+           /*printf("Etat read : %i\n",returnVAlue);
+           printf("Reponse : %i\n",response);*/
+         }
+         
+         //BufferTableCircleBlack[3] = x;
+         
+        nbrOctSent = write(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
+        usleep(7000);
+        returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+        /*printf("Nbr octets envoyés : %i\n",nbrOctSent);
+        printf("Nbr octets recu : %i\n",returnVAlue);
+        printf("Reponse : %i\n",response);*/
+
+        
+        
         
         
         //while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}
     }
+      write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
+      usleep(50000);
+      read(oledScreen.m_iDescIo, & response, 1);
     printf("fin");
-    wait( & iResult);
     tcsetattr(oledScreen.m_iDescIo, TCSANOW, & termiosOledInit);
     close(oledScreen.m_iDescIo);
     close(a2iFdPipe[0]);
