@@ -42,3 +42,24 @@ size_t DateLocale(const char strFormatDate[], char strDate[],size_t sztTaillestr
 
    return 0;
 };
+
+int SendCommand(int *data){
+   int nbrOctSent = 0;
+   int returnValue = 0;
+   char responseOled[40];
+
+   nbrOctSent = write(oledScreen.m_iDescIo, *data, sizeof(*data));
+
+   // adapted to 115200 baud
+   usleep(7000);
+
+   returnVAlue = read(oledScreen.m_iDescIo, & responseOled, 1);
+
+   if((nbrOctSent == sizeof(*data)) && (returnVAlue != -1)){
+      return 1;
+   }
+   else{
+      return -1;
+   }
+}
+

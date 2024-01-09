@@ -58,6 +58,8 @@ void InitComp(void);
 
 size_t DateLocale(const char strFormatDate[], char strDate[],size_t sztTaillestrDate);
 
+int SendCommand(int *data);
+
 #endif // #if !defined __PRJOLED_H__
 
 
