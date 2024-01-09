@@ -27,7 +27,7 @@ void signal_handler(int iSignal) {
     sigFlagStop = -1;
     break;
   case SIGALRM:
-    sigFlagStop = -1;
+    sigFlagStop = 2;
   default:
     break;
   }
@@ -138,14 +138,21 @@ int main(int iArgCount, char * apstrArgValue[]) {
     0x19
   };
 
-  char frameDelaySet[] {
+  char frameDelaySet[] = {
     0xFF, 
     0x69, 
     0x00, 
     0x01
   };
+  
+  char *tmp ;
 
   int buttonsState = 5;
+  int buttonsStateOld = 6;
+  int buttonsState1Old = 6;
+  int buttonsState2Old = 6;
+  int buttonsState1 = 5;
+  int buttonsState2 = 5;
   int buttonsStateReceive = 5;
 
   int x = 75;
@@ -175,7 +182,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
   oledScreen.m_iDescIo = open(oledScreen.m_strPathDev, (O_RDWR | O_NONBLOCK));
   gpioButton1.m_DevChar.m_iDescIo = open(gpioButton1.m_DevChar.m_strPathDev, O_RDWR);
 
-  // signals used on this project
+  // signals used on this project,
   //signal(SIGINT,signal_handler);
   signal(SIGALRM, signal_handler);
   signal(SIGINT, signal_handler);
@@ -202,7 +209,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
   iVerif = tcgetattr(oledScreen.m_iDescIo, & termiosOled);
 
   // copy the init to reset at the end of the program
-  memcpy(&termiosOledInit,&termiosOled,sizeof(struct termiosOled));
+  memcpy(&termiosOledInit,&termiosOled,sizeof(struct termios));
   // termiosOledInit = termiosOled;
 
   if (iVerif == 0) {
@@ -259,6 +266,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
       close(a2iFdPipe[0]);
 
       int temp = 0;
+      int temp2 = 0;
       while (sigFlagStop != -1) {
 
         // polling on two buttons
@@ -271,11 +279,11 @@ int main(int iArgCount, char * apstrArgValue[]) {
           fprintf(stdout, "Bouton 1\n");
           if (temp == 0) {
             temp = 1;
-            buttonsState = 0;
+            buttonsState1 = 1;
           } else {
             temp = 0;
 
-            buttonsState = 1;
+            buttonsState1 = 2;
           }
         }
 
@@ -283,20 +291,38 @@ int main(int iArgCount, char * apstrArgValue[]) {
         if (gpioButton1.m_pollfd[0].revents == gpioButton1.m_pollfd[0].events) {
           read(gpioButton1.m_event_request[0].fd, & (gpioButton1.m_event_data[0]), sizeof(gpioButton1.m_event_data[0]));
           fprintf(stdout, "Bouton 2\n");
-          if (temp == 0) {
-            temp = 1;
-            buttonsState = 2;
+          if (temp2 == 0) {
+            temp2 = 1;
+            buttonsState2 = 3;
           } else {
-            temp = 0;
+            temp2 = 0;
 
-            buttonsState = 3;
+            buttonsState2 = 4;
           }
         }
+        
+        
+        /*if ((buttonsState1Old != buttonsState1) || (buttonsState2Old != buttonsState2))
+        
+           if((buttonsState1Old != buttonsState1) && ){
+           }
+           
+           if(buttonsState1Old != buttonsState1){
+               buttonsState1Old = buttonsState1;
+               buttonsState = buttonsState1;
+            }
+           if(buttonsState2Old != buttonsState2){
+               buttonsState2Old = buttonsState2;
+               buttonsState = buttonsState2;
+            }
+            buttonsStateOld = buttonsState;
+            write(a2iFdPipe[1], & buttonsState, 1);
+         }
 
-        //fprintf(stdout,"Send : %i\n",buttonsState);
+        fprintf(stdout,"Send : %i\n",buttonsState);*/
 
-        // write on the pipe
-        write(a2iFdPipe[1], & buttonsState, 1);
+        
+        
 
       }
       // when close program
@@ -315,15 +341,17 @@ int main(int iArgCount, char * apstrArgValue[]) {
       while (sigFlagStop != -1) {
 
         // reading of buttons states
+        alarm(1);
         iResult = read(a2iFdPipe[0], & buttonsStateReceive, 1);
         //fprintf(stdout,"Receive : %i\n",buttonsStateReceive);
-
+        fprintf(stdout,"Nombre recu :  %i\n",buttonsStateReceive);
+   
         // define x of the protagonist
-        if ((buttonsStateReceive == 0) && (x > 12)) {
-          x = x - 6;
-          tempMove = 1;
-        } else if ((buttonsStateReceive == 2) && (x < 116)) {
+        if ((buttonsStateReceive == 1) && (x > 13)) {
           x = x + 6;
+          tempMove = 1;
+        } else if ((buttonsStateReceive == 2) && (x < 115)) {
+          x = x - 6;
           tempMove = 1;
         } else {
           tempMove = 0;
@@ -334,20 +362,25 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
         // execute the reset only if event occur
         if (tempMove == 1) {
-          nbrOctSent = write(oledScreen.m_iDescIo, & blackRectangle, sizeof(blackRectangle));
+          write(oledScreen.m_iDescIo, & blackRectangle, sizeof(blackRectangle));
           usleep(7000);
           returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+          //tmp = blackRectangle;
+          //SendCommand(oledScreen.m_iDescIo,tmp);
           /*printf("Etat read : %i\n",returnVAlue);
           printf("Reponse : %i\n",response);*/
-        }
+        
 
         // sending command to display main  character
-        nbrOctSent = write(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
-        usleep(7000);
-        returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+         write(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
+          usleep(7000);
+          returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+          //tmp = BufferTableCircle;
+        //SendCommand(oledScreen.m_iDescIo,tmp);
         /*printf("Nbr octets envoyés : %i\n",nbrOctSent);
         printf("Nbr octets recu : %i\n",returnVAlue);
         printf("Reponse : %i\n",response);*/
+        }
 
         //while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}
       }
