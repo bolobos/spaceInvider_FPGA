@@ -34,6 +34,9 @@ void signal_handler(int iSignal) {
   }
 }
 
+
+
+
 struct dataMix16Separatebits {
 
   short int dataAlone8bitsLOW;
@@ -49,6 +52,31 @@ union buffer {
 void send16bits(int iFd, union buffer data) {
   write(iFd, & data.commandStruct.dataAlone8bitsHIGH, sizeof(data.commandStruct.dataAlone8bitsHIGH));
   write(iFd, & data.commandStruct.dataAlone8bitsLOW, sizeof(data.commandStruct.dataAlone8bitsHIGH));
+}
+
+
+
+int response;
+int returnVAlue;
+int nbrOctSent;
+
+void writeText(int fd, int x, int y, char* text);
+void writeText(int fd, int x, int y, char* text){
+
+   moveOrigin[3] = x;
+   moveOrigin[5] = y;
+   write(fd, & moveOrigin, sizeof(moveOrigin));
+   usleep(7000);
+   read(fd, & response, 1);
+   
+   for(int iBcl = 0;iBcl < sizeof(text);iBcl++){
+      fprintf(stdout, "iBcl %i\n",iBcl);
+      printChar[2] = 0;
+      printChar[3] = text[iBcl];
+      write(fd, & printChar, sizeof(printChar));
+      usleep(7000);
+      read(fd, & response, 1);
+   }
 }
 
 int main(int iArgCount, char * apstrArgValue[]) {
@@ -67,94 +95,9 @@ int main(int iArgCount, char * apstrArgValue[]) {
   char strMessage[] = "message";
   char strMessageRecu[7];
 
-  int response;
-  int returnVAlue;
-  int nbrOctSent;
 
-  // definitions of different commands
 
-  char BufferTable[12] = {
-    0xff,
-    0xCF,
-    0x00,
-    0x0A,
-    0x00,
-    0x14,
-    0x00,
-    0x5A,
-    0x00,
-    0x3C,
-    0xF8,
-    0x11
-  };
-  // rayon : 6
-  char BufferTableCircle[12] = {
-    0xFF,
-    0xCC,
-    0x00,
-    0x07,
-    0x00,
-    0x78,
-    0x00,
-    0x06,
-    0x84,
-    0x10
-  };
-  char BufferTableCircleBlack[12] = {
-    0xFF,
-    0xCC,
-    0x00,
-    0x07,
-    0x00,
-    0x78,
-    0x00,
-    0x06,
-    0x00,
-    0x00
-  };
-
-  char blackRectangle[12] = {
-    0xFF,
-    0xCE,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x00,
-    0x7F,
-    0x00,
-    0x7F,
-    0x00,
-    0x00
-  };
   
-  char moveCursor[] = {
-      0xFF, 0xE4, 0x00, 0x3F, 0x00, 0x3F
-  };
-  
-  char textSpaceInvider[] = {
-      0x00, 0x06, 0x53, 0x50, 0x41, 0x43, 0x45, 0x20, 0x49, 0x4E, 0x56, 0x49, 0x44, 0x45, 0x52, 0x00
-  };
-  
-
-
-  char clearScreen[2] = {
-    0xFF,
-    0xD7
-  };
-  char setBaudRate[] = {
-    0x00,
-    0x0B,
-    0x00,
-    0x19
-  };
-
-  char frameDelaySet[] = {
-    0xFF, 
-    0x69, 
-    0x00, 
-    0x01
-  };
   
   char *tmp ;
 
@@ -379,13 +322,17 @@ int main(int iArgCount, char * apstrArgValue[]) {
       close(a2iFdPipe[1]);
       int tempMove = 1;
       
-      write(oledScreen.m_iDescIo, & moveCursor, sizeof(moveCursor));
+      /*write(oledScreen.m_iDescIo, & moveCursor, sizeof(moveCursor));
       usleep(7000);
       returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+
       
       write(oledScreen.m_iDescIo, & textSpaceInvider, sizeof(textSpaceInvider));
       usleep(7000);
-      returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+      returnVAlue = read(oledScreen.m_iDescIo, & response, 1);*/
+      writeText(oledScreen.m_iDescIo,20,63,"Space Invider");
+      
+      writeText(oledScreen.m_iDescIo,30,90,"SAE");
       
       usleep(5000000);
       
@@ -452,7 +399,6 @@ int main(int iArgCount, char * apstrArgValue[]) {
          signal(SIGALRM, SIG_DFL);*/
         //fprintf(stdout,"Receive : %i\n",buttonsStateReceive);
         //fprintf(stdout,"Nombre recu :  %i\n",buttonsStateReceive);
-        
         // define x of the protagonist
         BufferTableCircleBlack[3] = BufferTableCircle[3];
         

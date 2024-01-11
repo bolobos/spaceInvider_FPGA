@@ -23,9 +23,9 @@ INSTOWNER = geii
 INSTGROUP = geii
 
 # SRCR : list of C source code for compiler 
-SRCS	= prjOled.c libraryPrj.c readPrgm.c
+SRCS	= prjOled.c libraryPrj.c readPrgm.c listCommands.c
 # OBJS : list of objet code for linker
-OBJS	= prjOled.o libraryPrj.o readPrgm.o
+OBJS	= prjOled.o libraryPrj.o readPrgm.o listCommands.o
 
 all:	$(PROGS)
 
@@ -56,3 +56,4 @@ libraryPrj.o: prjOled.h
 
 readPrgm.o: prjOled.h
 
+listCommands.o: prjOled.h
