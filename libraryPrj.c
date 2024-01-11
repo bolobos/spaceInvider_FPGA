@@ -42,3 +42,27 @@ size_t DateLocale(const char strFormatDate[], char strDate[],size_t sztTaillestr
 
    return 0;
 };
+
+int SendCommand(int fd,char *data){ 
+   int nbrOctSent = 0;
+   int returnVAlue = 0;
+   char responseOled[40];
+
+   nbrOctSent = write(fd, data, sizeof(*data));
+   
+   printf("nbr oct send : %i",nbrOctSent);
+
+   // adapted to 115200 baud
+   usleep(7000);
+
+   returnVAlue = read(fd, & responseOled, 1);
+   printf("Ack ? : %i",nbrOctSent);
+
+   if((nbrOctSent == sizeof(*data)) && (returnVAlue != -1)){
+      return 1;
+   }
+   else{
+      return -1;
+   }
+}
+
