@@ -17,6 +17,7 @@
 #include "prjOled.h"
 
 sig_atomic_t sigFlagStop = 0;
+sig_atomic_t sigFlagAlrm = 0;
 
 void signal_handler(int iSignal);
 void signal_handler(int iSignal) {
@@ -27,7 +28,7 @@ void signal_handler(int iSignal) {
     sigFlagStop = -1;
     break;
   case SIGALRM:
-    sigFlagStop = 2;
+    sigFlagAlrm = -1;
   default:
     break;
   }
@@ -230,15 +231,16 @@ int main(int iArgCount, char * apstrArgValue[]) {
     // set parameter
     termiosOled.c_cflag &= ~(CSTOPB);
 
-    /*cfsetispeed( & termiosOled, B9600);
-    cfsetospeed( & termiosOled, B9600);*/
-    cfsetispeed( & termiosOled, B115200);
+    cfsetispeed( & termiosOled, B9600);
     cfsetospeed( & termiosOled, B9600);
+    /*cfsetispeed( & termiosOled, B115200);
+    cfsetospeed( & termiosOled, B9600);
+    iVerif = tcsetattr(oledScreen.m_iDescIo, TCSANOW, & termiosOled);
     nbrOctSent = write(oledScreen.m_iDescIo, & setBaudRate, sizeof(setBaudRate));
-    usleep(50000);
+    usleep(500000);
     returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
     fprintf(stdout, "Return value : %i\n", returnVAlue);
-    cfsetospeed( & termiosOled, B115200);
+    cfsetospeed( & termiosOled, B115200);*/
 
     // set profile	a second time
     iVerif = tcsetattr(oledScreen.m_iDescIo, TCSANOW, & termiosOled);
@@ -267,6 +269,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
       int temp = 0;
       int temp2 = 0;
+      int temp3 = 1;
       while (sigFlagStop != -1) {
 
         // polling on two buttons
@@ -276,7 +279,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
         // press the button 1
         if (gpioButton1.m_pollfd[1].revents == gpioButton1.m_pollfd[1].events) {
           read(gpioButton1.m_event_request[1].fd, & (gpioButton1.m_event_data[1]), sizeof(gpioButton1.m_event_data[1]));
-          fprintf(stdout, "Bouton 1\n");
+          //fprintf(stdout, "Bouton 1\n");
           if (temp == 0) {
             temp = 1;
             buttonsState1 = 1;
@@ -285,12 +288,17 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
             buttonsState1 = 2;
           }
+            if(temp3 == 0){
+               write(a2iFdPipe[1], & buttonsState1, 1);
+               fprintf(stdout,"Send : %i\n",buttonsState1);
+            }
+            
         }
 
         // press the button 2
         if (gpioButton1.m_pollfd[0].revents == gpioButton1.m_pollfd[0].events) {
           read(gpioButton1.m_event_request[0].fd, & (gpioButton1.m_event_data[0]), sizeof(gpioButton1.m_event_data[0]));
-          fprintf(stdout, "Bouton 2\n");
+          //fprintf(stdout, "Bouton 2\n");
           if (temp2 == 0) {
             temp2 = 1;
             buttonsState2 = 3;
@@ -298,29 +306,50 @@ int main(int iArgCount, char * apstrArgValue[]) {
             temp2 = 0;
 
             buttonsState2 = 4;
+            
           }
+            if(temp3 == 0){
+               write(a2iFdPipe[1], & buttonsState2, 1);
+               fprintf(stdout,"Send : %i\n",buttonsState2);
+            }
+            else{
+               temp3 = 0;
+            }
+        }
+        /*
+        if((buttonsState2 == 3) && ((temp2 || temp) == 1)){
+            write(a2iFdPipe[1], & buttonsState2, 1);
+            fprintf(stdout,"Send : %i\n",buttonsState2);
         }
         
+        else if((buttonsState1 == 1) && ((temp2 || temp) == 1)){
+            write(a2iFdPipe[1], & buttonsState1, 1);
+            fprintf(stdout,"Send : %i\n",buttonsState1);
+        }
+        */
+        /*if(buttonsState1Old != buttonsState1){
+            buttonsState1Old = buttonsState1;
+            buttonsState = buttonsState1;
+            write(a2iFdPipe[1], & buttonsState, 1);
+            fprintf(stdout,"Send : %i\n",buttonsState);
+        }
         
-        /*if ((buttonsState1Old != buttonsState1) || (buttonsState2Old != buttonsState2))
-        
-           if((buttonsState1Old != buttonsState1) && ){
-           }
-           
-           if(buttonsState1Old != buttonsState1){
-               buttonsState1Old = buttonsState1;
-               buttonsState = buttonsState1;
-            }
-           if(buttonsState2Old != buttonsState2){
-               buttonsState2Old = buttonsState2;
-               buttonsState = buttonsState2;
-            }
+        else if(buttonsState2Old != buttonsState2){
+            buttonsState2Old = buttonsState2;
+            buttonsState = buttonsState2;
+            write(a2iFdPipe[1], & buttonsState, 1);
+            fprintf(stdout,"Send : %i\n",buttonsState);
+            
+        }*/
+        /*if (buttonsStateOld != buttonsState){
             buttonsStateOld = buttonsState;
             write(a2iFdPipe[1], & buttonsState, 1);
-         }
-
-        fprintf(stdout,"Send : %i\n",buttonsState);*/
-
+            fprintf(stdout,"Send : %i\n",buttonsState);
+            sigFlagAlrm = 0;
+        }*/
+        
+        
+         usleep(500);
         
         
 
@@ -341,28 +370,83 @@ int main(int iArgCount, char * apstrArgValue[]) {
       while (sigFlagStop != -1) {
 
         // reading of buttons states
-        alarm(1);
-        iResult = read(a2iFdPipe[0], & buttonsStateReceive, 1);
+        /*alarm(1);
+        iResult = read(a2iFdPipe[0], &buttonsStateReceive, 1);*/
+        
+        
+        fd_set readSet;
+        FD_ZERO(&readSet);
+        FD_SET(a2iFdPipe[0], &readSet);
+
+        // Set timeout for select to zero for non-blocking check
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 50;
+
+        // Use select to check for readability with zero timeout
+        int ready = select(a2iFdPipe[0] + 1, &readSet, NULL, NULL, &timeout);
+
+        if (ready > 0) {
+            // Data is ready to be read
+            iResult = read(a2iFdPipe[0], &buttonsStateReceive, 1);
+            fprintf(stdout,"aye\n");
+            if (iResult == -1) {
+                // Handle other read errors if needed
+                perror("read");
+                break;
+            }
+
+            // Process the read data if needed
+        } else if (ready == 0) {
+            // No data available, do something else or continue the loop
+        } else {
+            // Handle select error
+            perror("select");
+            break;
+        }
+        
+       /*while (sigFlagAlrm != -1) {
+           char buttonsStateReceive;
+           ssize_t iResult;
+
+           // Handling EINTR for read
+           do {
+               
+           } while (iResult == -1 && errno == EINTR);
+
+           if (iResult == -1) {
+               // Handle other read errors if needed
+               perror("read");
+               break;
+           }
+
+           // Process the read data if needed
+       }
+       // Reset the signal handler for SIGALRM
+         signal(SIGALRM, SIG_DFL);*/
         //fprintf(stdout,"Receive : %i\n",buttonsStateReceive);
         fprintf(stdout,"Nombre recu :  %i\n",buttonsStateReceive);
-   
+        
         // define x of the protagonist
+        BufferTableCircleBlack[3] = BufferTableCircle[3];
+        
         if ((buttonsStateReceive == 1) && (x > 13)) {
-          x = x + 6;
+          x = x - 2;
           tempMove = 1;
-        } else if ((buttonsStateReceive == 2) && (x < 115)) {
-          x = x - 6;
+        } else if ((buttonsStateReceive == 3) && (x < 115)) {
+          x = x + 2;
           tempMove = 1;
         } else {
           tempMove = 0;
         }
-
-        // modifications on the table of char
+        
         BufferTableCircle[3] = x;
+
 
         // execute the reset only if event occur
         if (tempMove == 1) {
-          write(oledScreen.m_iDescIo, & blackRectangle, sizeof(blackRectangle));
+         // modifications on the table of char
+          write(oledScreen.m_iDescIo, & BufferTableCircleBlack, sizeof(BufferTableCircleBlack));
           usleep(7000);
           returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
           //tmp = blackRectangle;
@@ -380,6 +464,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
         /*printf("Nbr octets envoyés : %i\n",nbrOctSent);
         printf("Nbr octets recu : %i\n",returnVAlue);
         printf("Reponse : %i\n",response);*/
+        
         }
 
         //while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}
