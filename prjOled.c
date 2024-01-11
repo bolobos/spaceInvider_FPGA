@@ -127,6 +127,16 @@ int main(int iArgCount, char * apstrArgValue[]) {
     0x00,
     0x00
   };
+  
+  char moveCursor[] = {
+      0xFF, 0xE4, 0x00, 0x3F, 0x00, 0x3F
+  };
+  
+  char textSpaceInvider[] = {
+      0x00, 0x06, 0x53, 0x50, 0x41, 0x43, 0x45, 0x20, 0x49, 0x4E, 0x56, 0x49, 0x44, 0x45, 0x52, 0x00
+  };
+  
+
 
   char clearScreen[2] = {
     0xFF,
@@ -211,7 +221,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
   // copy the init to reset at the end of the program
   memcpy(&termiosOledInit,&termiosOled,sizeof(struct termios));
-  // termiosOledInit = termiosOled;
+  termiosOledInit = termiosOled;
 
   if (iVerif == 0) {
 
@@ -231,19 +241,21 @@ int main(int iArgCount, char * apstrArgValue[]) {
     // set parameter
     termiosOled.c_cflag &= ~(CSTOPB);
 
-    cfsetispeed( & termiosOled, B9600);
-    cfsetospeed( & termiosOled, B9600);
-    /*cfsetispeed( & termiosOled, B115200);
+    /*cfsetispeed( & termiosOled, B9600);
+    cfsetospeed( & termiosOled, B9600);*/
+    cfsetispeed( & termiosOled, B115200);
     cfsetospeed( & termiosOled, B9600);
     iVerif = tcsetattr(oledScreen.m_iDescIo, TCSANOW, & termiosOled);
+    usleep(110000);
     nbrOctSent = write(oledScreen.m_iDescIo, & setBaudRate, sizeof(setBaudRate));
-    usleep(500000);
-    returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
-    fprintf(stdout, "Return value : %i\n", returnVAlue);
-    cfsetospeed( & termiosOled, B115200);*/
-
+    usleep(110000);
+    //returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+    //fprintf(stdout, "Return value : %i\n", returnVAlue);
+    cfsetospeed( & termiosOled, B115200);
+    usleep(110000);
     // set profile	a second time
     iVerif = tcsetattr(oledScreen.m_iDescIo, TCSANOW, & termiosOled);
+    usleep(110000);
 
   }
   // create pipe to transfer data between forks
@@ -290,7 +302,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
           }
             if(temp3 == 0){
                write(a2iFdPipe[1], & buttonsState1, 1);
-               fprintf(stdout,"Send : %i\n",buttonsState1);
+               //fprintf(stdout,"Send : %i\n",buttonsState1);
             }
             
         }
@@ -310,7 +322,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
           }
             if(temp3 == 0){
                write(a2iFdPipe[1], & buttonsState2, 1);
-               fprintf(stdout,"Send : %i\n",buttonsState2);
+               //fprintf(stdout,"Send : %i\n",buttonsState2);
             }
             else{
                temp3 = 0;
@@ -366,6 +378,21 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
       close(a2iFdPipe[1]);
       int tempMove = 1;
+      
+      write(oledScreen.m_iDescIo, & moveCursor, sizeof(moveCursor));
+      usleep(7000);
+      returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+      
+      write(oledScreen.m_iDescIo, & textSpaceInvider, sizeof(textSpaceInvider));
+      usleep(7000);
+      returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+      
+      usleep(5000000);
+      
+      write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
+      usleep(50000);
+      read(oledScreen.m_iDescIo, & response, 1);
+      
 
       while (sigFlagStop != -1) {
 
@@ -389,7 +416,6 @@ int main(int iArgCount, char * apstrArgValue[]) {
         if (ready > 0) {
             // Data is ready to be read
             iResult = read(a2iFdPipe[0], &buttonsStateReceive, 1);
-            fprintf(stdout,"aye\n");
             if (iResult == -1) {
                 // Handle other read errors if needed
                 perror("read");
@@ -425,7 +451,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
        // Reset the signal handler for SIGALRM
          signal(SIGALRM, SIG_DFL);*/
         //fprintf(stdout,"Receive : %i\n",buttonsStateReceive);
-        fprintf(stdout,"Nombre recu :  %i\n",buttonsStateReceive);
+        //fprintf(stdout,"Nombre recu :  %i\n",buttonsStateReceive);
         
         // define x of the protagonist
         BufferTableCircleBlack[3] = BufferTableCircle[3];
@@ -447,7 +473,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
         if (tempMove == 1) {
          // modifications on the table of char
           write(oledScreen.m_iDescIo, & BufferTableCircleBlack, sizeof(BufferTableCircleBlack));
-          usleep(7000);
+          usleep(5000);
           returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
           //tmp = blackRectangle;
           //SendCommand(oledScreen.m_iDescIo,tmp);
@@ -457,7 +483,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
         // sending command to display main  character
          write(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
-          usleep(7000);
+          usleep(5000);
           returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
           //tmp = BufferTableCircle;
         //SendCommand(oledScreen.m_iDescIo,tmp);
