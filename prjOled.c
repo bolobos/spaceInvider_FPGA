@@ -224,11 +224,13 @@ int main(int iArgCount, char * apstrArgValue[]) {
           //fprintf(stdout, "Bouton 1\n");
           if (temp == 0) {
             temp = 1;
+            //fprintf(stdout, "1\n");
             buttonsState1 = 1;
           } else {
             temp = 0;
 
             buttonsState1 = 2;
+            //fprintf(stdout, "2\n");
           }
           if (temp3 == 0) {
             write(a2iFdPipe[1], & buttonsState1, 1);
@@ -240,13 +242,14 @@ int main(int iArgCount, char * apstrArgValue[]) {
         // press the button 2
         if (gpioButton1.m_pollfd[0].revents == gpioButton1.m_pollfd[0].events) {
           read(gpioButton1.m_event_request[0].fd, & (gpioButton1.m_event_data[0]), sizeof(gpioButton1.m_event_data[0]));
-          //fprintf(stdout, "Bouton 2\n");
+          
           if (temp2 == 0) {
             temp2 = 1;
             buttonsState2 = 3;
+            //fprintf(stdout, "3\n");
           } else {
             temp2 = 0;
-
+						//fprintf(stdout, "4\n");
             buttonsState2 = 4;
 
           }
