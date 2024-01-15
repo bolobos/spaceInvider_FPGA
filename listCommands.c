@@ -27,7 +27,7 @@ extern char BufferTableCircle[12] = {
  0x00,
  0x06,
  0x84,
- 0x10
+ 0xFF
 };
 extern char BufferTableCircleBlack[12] = {
  0xFF,
