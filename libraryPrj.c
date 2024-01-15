@@ -52,7 +52,7 @@ int SendCommand(int fd,char *data,size_t dataSize){
    nbrOctSent = write(fd, data, dataSize);
 
    // adapted to 115200 baud
-   usleep(7000);
+   usleep(10000);
 
    returnVAlue = read(fd, & responseOled, 1);
 
@@ -62,6 +62,37 @@ int SendCommand(int fd,char *data,size_t dataSize){
    else{
       return -1;
    }
+}
+
+void writeText(int fd, int x, int y, char * text) {
+
+  char responseOled[40];
+  moveOrigin[3] = x;
+  moveOrigin[5] = y;
+  write(fd, & moveOrigin, sizeof(moveOrigin));
+  usleep(7000);
+  read(fd, & responseOled, 1);
+
+  for (int iBcl = 0; iBcl < sizeof(text); iBcl++) {
+    //fprintf(stdout, "iBcl %i\n",iBcl);
+    printChar[2] = 0;
+    printChar[3] = text[iBcl];
+    write(fd, & printChar, sizeof(printChar));
+    usleep(7000);
+    read(fd, & responseOled, 1);
+  }
+}
+
+void printTriangle(int fd, int x, int y, int taille) {
+   
+   Triangle[3] = x;
+   Triangle[5] = y;
+   Triangle[7] = x+taille;
+   Triangle[9] = y+taille;
+   Triangle[11] = x-taille;
+   Triangle[13] = y+taille;
+   
+   SendCommand(fd, & Triangle, sizeof(Triangle));
 }
 
 /*void InitOled(int fd, termios *termiosOled){

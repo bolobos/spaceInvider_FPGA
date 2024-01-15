@@ -61,6 +61,9 @@ size_t DateLocale(const char strFormatDate[], char strDate[],size_t sztTaillestr
 
 int SendCommand(int fd,char *data,size_t dataSize);
 
+void writeText(int fd, int x, int y, char * text);
+
+
 //void InitOled(int fd, termios *termiosOled);
 
 
@@ -80,11 +83,10 @@ extern char moveOrigin[6];
 
 
 
-
+extern char Triangle[16];
 
 extern char clearScreen[2];
 extern char setBaudRate[4];
-extern char frameDelaySet[4];
 
 #endif // #if !defined __PRJOLED_H__
 

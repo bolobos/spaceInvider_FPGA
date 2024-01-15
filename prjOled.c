@@ -55,24 +55,7 @@ int response;
 int returnVAlue;
 int nbrOctSent;
 
-void writeText(int fd, int x, int y, char * text);
-void writeText(int fd, int x, int y, char * text) {
 
-  moveOrigin[3] = x;
-  moveOrigin[5] = y;
-  write(fd, & moveOrigin, sizeof(moveOrigin));
-  usleep(7000);
-  read(fd, & response, 1);
-
-  for (int iBcl = 0; iBcl < sizeof(text); iBcl++) {
-    //fprintf(stdout, "iBcl %i\n",iBcl);
-    printChar[2] = 0;
-    printChar[3] = text[iBcl];
-    write(fd, & printChar, sizeof(printChar));
-    usleep(7000);
-    read(fd, & response, 1);
-  }
-}
 
 int main(int iArgCount, char * apstrArgValue[]) {
 
@@ -273,14 +256,17 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
       // OLED screen handler
     default: // Pere
-
       close(a2iFdPipe[1]);
       int tempMove = 1;
+      
+      	
+
+			printTriangle(oledScreen.m_iDescIo, 40, 40, 4);
 
       /*write(oledScreen.m_iDescIo, & moveCursor, sizeof(moveCursor));
       usleep(7000);
       returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
-
+			
       
       write(oledScreen.m_iDescIo, & textSpaceInvider, sizeof(textSpaceInvider));
       usleep(7000);
@@ -292,7 +278,9 @@ int main(int iArgCount, char * apstrArgValue[]) {
       usleep(5000000);
 
       //write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
-      SendCommand(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
+      write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
+      usleep(50000);
+      read(oledScreen.m_iDescIo, & response, 1);
       //usleep(50000);
       //read(oledScreen.m_iDescIo, & response, 1);
       fd_set readSet;
