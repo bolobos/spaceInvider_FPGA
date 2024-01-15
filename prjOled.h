@@ -34,7 +34,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include <termios.h>
-
+#include <sys/time.h>
 
 struct TDevice;
 struct TDevice {
@@ -75,7 +75,7 @@ extern char BufferTable[12];
 extern char BufferTableCircle[12];
 extern char BufferTableCircleBlack[12];
 
-extern char blackRectangle[12];
+
 
 extern char printChar[4];
 
@@ -88,6 +88,18 @@ extern char Triangle[16];
 extern char clearScreen[2];
 extern char setBaudRate[4];
 
+
+extern      char Rond[12];
+   extern   char RondClear[12];
+   extern   char RondHaut[12];
+    extern  char RondBas[12];
+   extern   char RondBasDecale[12];
+     extern char RondBasCentre[12];
+
+   extern   char blackRectangle[12];
+   
+   
+  
 #endif // #if !defined __PRJOLED_H__
 
 
