@@ -70,7 +70,7 @@ extern char moveOrigin[] = {
 
 
 
-extern char clearScreen[2] = {
+extern char clearScreen[] = {
  0xFF,
  0xD7
 };

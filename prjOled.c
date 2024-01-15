@@ -34,9 +34,6 @@ void signal_handler(int iSignal) {
   }
 }
 
-
-
-
 struct dataMix16Separatebits {
 
   short int dataAlone8bitsLOW;
@@ -54,29 +51,27 @@ void send16bits(int iFd, union buffer data) {
   write(iFd, & data.commandStruct.dataAlone8bitsLOW, sizeof(data.commandStruct.dataAlone8bitsHIGH));
 }
 
-
-
 int response;
 int returnVAlue;
 int nbrOctSent;
 
-void writeText(int fd, int x, int y, char* text);
-void writeText(int fd, int x, int y, char* text){
+void writeText(int fd, int x, int y, char * text);
+void writeText(int fd, int x, int y, char * text) {
 
-   moveOrigin[3] = x;
-   moveOrigin[5] = y;
-   write(fd, & moveOrigin, sizeof(moveOrigin));
-   usleep(7000);
-   read(fd, & response, 1);
-   
-   for(int iBcl = 0;iBcl < sizeof(text);iBcl++){
-      fprintf(stdout, "iBcl %i\n",iBcl);
-      printChar[2] = 0;
-      printChar[3] = text[iBcl];
-      write(fd, & printChar, sizeof(printChar));
-      usleep(7000);
-      read(fd, & response, 1);
-   }
+  moveOrigin[3] = x;
+  moveOrigin[5] = y;
+  write(fd, & moveOrigin, sizeof(moveOrigin));
+  usleep(7000);
+  read(fd, & response, 1);
+
+  for (int iBcl = 0; iBcl < sizeof(text); iBcl++) {
+    //fprintf(stdout, "iBcl %i\n",iBcl);
+    printChar[2] = 0;
+    printChar[3] = text[iBcl];
+    write(fd, & printChar, sizeof(printChar));
+    usleep(7000);
+    read(fd, & response, 1);
+  }
 }
 
 int main(int iArgCount, char * apstrArgValue[]) {
@@ -95,11 +90,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
   char strMessage[] = "message";
   char strMessageRecu[7];
 
-
-
-  
-  
-  char *tmp ;
+  char * tmp;
 
   int buttonsState = 5;
   int buttonsStateOld = 6;
@@ -157,17 +148,14 @@ int main(int iArgCount, char * apstrArgValue[]) {
   }
   //alarm(5);
 
-
   // init 
   // get back current config
   iVerif = tcgetattr(oledScreen.m_iDescIo, & termiosOled);
 
   // copy the init to reset at the end of the program
-  memcpy(&termiosOledInit,&termiosOled,sizeof(struct termios));
-  termiosOledInit = termiosOled;
+  memcpy( & termiosOledInit, & termiosOled, sizeof(struct termios));
 
   if (iVerif == 0) {
-
     // ignore signals of terminals
     termiosOled.c_iflag &= ~CLOCAL;
 
@@ -199,7 +187,6 @@ int main(int iArgCount, char * apstrArgValue[]) {
     // set profile	a second time
     iVerif = tcsetattr(oledScreen.m_iDescIo, TCSANOW, & termiosOled);
     usleep(110000);
-
   }
   // create pipe to transfer data between forks
   iResult = pipe(a2iFdPipe);
@@ -218,7 +205,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
       iResult = -1;
       break;
 
-    // button handler (exterior devices)
+      // button handler (exterior devices)
     case 0: // Fils
       close(a2iFdPipe[0]);
 
@@ -243,11 +230,11 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
             buttonsState1 = 2;
           }
-            if(temp3 == 0){
-               write(a2iFdPipe[1], & buttonsState1, 1);
-               //fprintf(stdout,"Send : %i\n",buttonsState1);
-            }
-            
+          if (temp3 == 0) {
+            write(a2iFdPipe[1], & buttonsState1, 1);
+            //fprintf(stdout,"Send : %i\n",buttonsState1);
+          }
+
         }
 
         // press the button 2
@@ -261,52 +248,17 @@ int main(int iArgCount, char * apstrArgValue[]) {
             temp2 = 0;
 
             buttonsState2 = 4;
-            
+
           }
-            if(temp3 == 0){
-               write(a2iFdPipe[1], & buttonsState2, 1);
-               //fprintf(stdout,"Send : %i\n",buttonsState2);
-            }
-            else{
-               temp3 = 0;
-            }
-        }
-        /*
-        if((buttonsState2 == 3) && ((temp2 || temp) == 1)){
+          if (temp3 == 0) {
             write(a2iFdPipe[1], & buttonsState2, 1);
-            fprintf(stdout,"Send : %i\n",buttonsState2);
+            //fprintf(stdout,"Send : %i\n",buttonsState2);
+          } else {
+            temp3 = 0;
+          }
         }
-        
-        else if((buttonsState1 == 1) && ((temp2 || temp) == 1)){
-            write(a2iFdPipe[1], & buttonsState1, 1);
-            fprintf(stdout,"Send : %i\n",buttonsState1);
-        }
-        */
-        /*if(buttonsState1Old != buttonsState1){
-            buttonsState1Old = buttonsState1;
-            buttonsState = buttonsState1;
-            write(a2iFdPipe[1], & buttonsState, 1);
-            fprintf(stdout,"Send : %i\n",buttonsState);
-        }
-        
-        else if(buttonsState2Old != buttonsState2){
-            buttonsState2Old = buttonsState2;
-            buttonsState = buttonsState2;
-            write(a2iFdPipe[1], & buttonsState, 1);
-            fprintf(stdout,"Send : %i\n",buttonsState);
-            
-        }*/
-        /*if (buttonsStateOld != buttonsState){
-            buttonsStateOld = buttonsState;
-            write(a2iFdPipe[1], & buttonsState, 1);
-            fprintf(stdout,"Send : %i\n",buttonsState);
-            sigFlagAlrm = 0;
-        }*/
-        
-        
-         usleep(500);
-        
-        
+
+        usleep(500);
 
       }
       // when close program
@@ -316,12 +268,12 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
       ////////////////////////////////////////////////////////////////////////////////////////////
 
-    // OLED screen handler
+      // OLED screen handler
     default: // Pere
 
       close(a2iFdPipe[1]);
       int tempMove = 1;
-      
+
       /*write(oledScreen.m_iDescIo, & moveCursor, sizeof(moveCursor));
       usleep(7000);
       returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
@@ -330,27 +282,26 @@ int main(int iArgCount, char * apstrArgValue[]) {
       write(oledScreen.m_iDescIo, & textSpaceInvider, sizeof(textSpaceInvider));
       usleep(7000);
       returnVAlue = read(oledScreen.m_iDescIo, & response, 1);*/
-      writeText(oledScreen.m_iDescIo,20,63,"Space Invider");
-      
-      writeText(oledScreen.m_iDescIo,30,90,"SAE");
-      
+      writeText(oledScreen.m_iDescIo, 20, 63, "Space Invider");
+
+      writeText(oledScreen.m_iDescIo, 30, 90, "SAE");
+
       usleep(5000000);
-      
-      write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
-      usleep(50000);
-      read(oledScreen.m_iDescIo, & response, 1);
-      
+
+      //write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
+      SendCommand(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
+      //usleep(50000);
+      //read(oledScreen.m_iDescIo, & response, 1);
+      fd_set readSet;
 
       while (sigFlagStop != -1) {
 
         // reading of buttons states
         /*alarm(1);
         iResult = read(a2iFdPipe[0], &buttonsStateReceive, 1);*/
-        
-        
-        fd_set readSet;
-        FD_ZERO(&readSet);
-        FD_SET(a2iFdPipe[0], &readSet);
+
+        FD_ZERO( & readSet);
+        FD_SET(a2iFdPipe[0], & readSet);
 
         // Set timeout for select to zero for non-blocking check
         struct timeval timeout;
@@ -358,50 +309,29 @@ int main(int iArgCount, char * apstrArgValue[]) {
         timeout.tv_usec = 50;
 
         // Use select to check for readability with zero timeout
-        int ready = select(a2iFdPipe[0] + 1, &readSet, NULL, NULL, &timeout);
+        int ready = select(a2iFdPipe[0] + 1, & readSet, NULL, NULL, & timeout);
 
         if (ready > 0) {
-            // Data is ready to be read
-            iResult = read(a2iFdPipe[0], &buttonsStateReceive, 1);
-            if (iResult == -1) {
-                // Handle other read errors if needed
-                perror("read");
-                break;
-            }
-
-            // Process the read data if needed
-        } else if (ready == 0) {
-            // No data available, do something else or continue the loop
-        } else {
-            // Handle select error
-            perror("select");
+          // Data is ready to be read
+          iResult = read(a2iFdPipe[0], & buttonsStateReceive, 1);
+          if (iResult == -1) {
+            // Handle other read errors if needed
+            //perror("read");
             break;
+          }
+
+          // Process the read data if needed
+        } else if (ready == 0) {
+          // No data available, do something else or continue the loop
+        } else {
+          // Handle select error
+          //perror("select");
+          break;
         }
+
         
-       /*while (sigFlagAlrm != -1) {
-           char buttonsStateReceive;
-           ssize_t iResult;
-
-           // Handling EINTR for read
-           do {
-               
-           } while (iResult == -1 && errno == EINTR);
-
-           if (iResult == -1) {
-               // Handle other read errors if needed
-               perror("read");
-               break;
-           }
-
-           // Process the read data if needed
-       }
-       // Reset the signal handler for SIGALRM
-         signal(SIGALRM, SIG_DFL);*/
-        //fprintf(stdout,"Receive : %i\n",buttonsStateReceive);
-        //fprintf(stdout,"Nombre recu :  %i\n",buttonsStateReceive);
-        // define x of the protagonist
         BufferTableCircleBlack[3] = BufferTableCircle[3];
-        
+
         if ((buttonsStateReceive == 1) && (x > 13)) {
           x = x - 2;
           tempMove = 1;
@@ -411,32 +341,26 @@ int main(int iArgCount, char * apstrArgValue[]) {
         } else {
           tempMove = 0;
         }
-        
-        BufferTableCircle[3] = x;
 
+        BufferTableCircle[3] = x;
 
         // execute the reset only if event occur
         if (tempMove == 1) {
-         // modifications on the table of char
-          write(oledScreen.m_iDescIo, & BufferTableCircleBlack, sizeof(BufferTableCircleBlack));
-          usleep(5000);
-          returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+          // modifications on the table of char
+          SendCommand(oledScreen.m_iDescIo, & BufferTableCircleBlack, sizeof(BufferTableCircleBlack));
           //tmp = blackRectangle;
           //SendCommand(oledScreen.m_iDescIo,tmp);
           /*printf("Etat read : %i\n",returnVAlue);
           printf("Reponse : %i\n",response);*/
-        
 
-        // sending command to display main  character
-         write(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
-          usleep(5000);
-          returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
+          // sending command to display main  character
+          SendCommand(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
           //tmp = BufferTableCircle;
-        //SendCommand(oledScreen.m_iDescIo,tmp);
-        /*printf("Nbr octets envoyés : %i\n",nbrOctSent);
-        printf("Nbr octets recu : %i\n",returnVAlue);
-        printf("Reponse : %i\n",response);*/
-        
+          //SendCommand(oledScreen.m_iDescIo,tmp);
+          /*printf("Nbr octets envoyés : %i\n",nbrOctSent);
+          printf("Nbr octets recu : %i\n",returnVAlue);
+          printf("Reponse : %i\n",response);*/
+
         }
 
         //while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}

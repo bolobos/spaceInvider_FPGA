@@ -54,11 +54,15 @@ struct TDeviceCharGpIO{
 	struct pollfd 					m_pollfd[64];
 };
 
+
 void InitComp(void);
 
 size_t DateLocale(const char strFormatDate[], char strDate[],size_t sztTaillestrDate);
 
-int SendCommand(int fd,char *data);
+int SendCommand(int fd,char *data,size_t dataSize);
+
+//void InitOled(int fd, termios *termiosOled);
+
 
 
 // definitions of different commands
