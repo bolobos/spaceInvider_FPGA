@@ -54,7 +54,8 @@ void send16bits(int iFd, union buffer data) {
 int response;
 int returnVAlue;
 int nbrOctSent;
-
+char* resPoten[10];
+char* resPotenOld[10];
 
 
 int main(int iArgCount, char * apstrArgValue[]) {
@@ -101,7 +102,12 @@ int main(int iArgCount, char * apstrArgValue[]) {
       .m_strPathDev = "/dev/gpiochip3",
     },
   };
-
+  	
+  	struct TDevice cdevAdcIA0 = {
+			.m_strPathDev 	= "/dev/ad7928c0IA0",
+			.m_iDescIo 		= -1,
+	};
+	
   // definitions of structure of the screen
   struct termios termiosOled;
   struct termios termiosOledInit;
@@ -109,6 +115,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
   // opening of devices
   oledScreen.m_iDescIo = open(oledScreen.m_strPathDev, (O_RDWR | O_NONBLOCK));
   gpioButton1.m_DevChar.m_iDescIo = open(gpioButton1.m_DevChar.m_strPathDev, O_RDWR);
+  cdevAdcIA0.m_iDescIo = open(cdevAdcIA0.m_strPathDev,O_RDONLY); // Ouverture du potentiomètre
 
   // signals used on this project,
   //signal(SIGINT,signal_handler);
@@ -196,59 +203,18 @@ int main(int iArgCount, char * apstrArgValue[]) {
       int temp2 = 0;
       int temp3 = 1;
       while (sigFlagStop != -1) {
-
-        // polling on two buttons
-        poll( & gpioButton1.m_pollfd[1], 1, 100);
-        poll( & gpioButton1.m_pollfd[0], 1, 100);
-
-        // press the button 1
-        if (gpioButton1.m_pollfd[1].revents == gpioButton1.m_pollfd[1].events) {
-          read(gpioButton1.m_event_request[1].fd, & (gpioButton1.m_event_data[1]), sizeof(gpioButton1.m_event_data[1]));
-          //fprintf(stdout, "Bouton 1\n");
-          if (temp == 0) {
-            temp = 1;
-            //fprintf(stdout, "1\n");
-            buttonsState1 = 1;
-          } else {
-            temp = 0;
-
-            buttonsState1 = 2;
-            //fprintf(stdout, "2\n");
-          }
-          if (temp3 == 0) {
-            write(a2iFdPipe[1], & buttonsState1, 1);
-            //fprintf(stdout,"Send : %i\n",buttonsState1);
-          }
-
-        }
-
-        // press the button 2
-        if (gpioButton1.m_pollfd[0].revents == gpioButton1.m_pollfd[0].events) {
-          read(gpioButton1.m_event_request[0].fd, & (gpioButton1.m_event_data[0]), sizeof(gpioButton1.m_event_data[0]));
-          
-          if (temp2 == 0) {
-            temp2 = 1;
-            buttonsState2 = 3;
-            //fprintf(stdout, "3\n");
-          } else {
-            temp2 = 0;
-						//fprintf(stdout, "4\n");
-            buttonsState2 = 4;
-
-          }
-          if (temp3 == 0) {
-            write(a2iFdPipe[1], & buttonsState2, 1);
-            //fprintf(stdout,"Send : %i\n",buttonsState2);
-          } else {
-            temp3 = 0;
-          }
-        }
+        
+        ReadAdcIA(cdevAdcIA0.m_iDescIo,resPoten,sizeof(resPoten));
+        
+        printf("%s\n",resPoten);
+        //if (resPoten == resPotenOld)
 
         usleep(500);
 
       }
       // when close program
       close(gpioButton1.m_DevChar.m_iDescIo);
+      close(cdevAdcIA0.m_iDescIo);
       close(a2iFdPipe[1]);
       break;
 
@@ -321,13 +287,13 @@ int main(int iArgCount, char * apstrArgValue[]) {
         }
 
         
-        BufferTableCircleBlack[3] = BufferTableCircle[3];
+        CircleBlack[3] = BufferTableCircle[3];
 
         if ((buttonsStateReceive == 1) && (x > 13)) {
-          x = x - 2;
+          x = x - 1;
           tempMove = 1;
         } else if ((buttonsStateReceive == 3) && (x < 115)) {
-          x = x + 2;
+          x = x + 1;
           tempMove = 1;
         } else {
           tempMove = 0;
@@ -338,7 +304,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
         // execute the reset only if event occur
         if (tempMove == 1) {
           // modifications on the table of char
-          SendCommand(oledScreen.m_iDescIo, & BufferTableCircleBlack, sizeof(BufferTableCircleBlack));
+          SendCommand(oledScreen.m_iDescIo, & CircleBlack, sizeof(CircleBlack));
           //tmp = blackRectangle;
           //SendCommand(oledScreen.m_iDescIo,tmp);
           /*printf("Etat read : %i\n",returnVAlue);

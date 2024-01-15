@@ -64,6 +64,32 @@ int SendCommand(int fd,char *data,size_t dataSize){
    }
 }
 
+
+
+int ReadAdcIA (int iDescAdcIA, char strValue[ ], int iStrSize) {
+
+	/* reservation et initialisation */
+	long 		iResult=0;
+	size_t 	sztNbrBytesRead=0;
+	
+	sztNbrBytesRead=0;
+	while ((sztNbrBytesRead < iStrSize) && (iResult>=0)) {
+		iResult=read(iDescAdcIA, &strValue[sztNbrBytesRead], (iStrSize-sztNbrBytesRead));
+		if (iResult >= 0) {
+			sztNbrBytesRead = sztNbrBytesRead + iResult;
+		}
+		else {
+			//perror("read AdcIA:");
+		}
+	}
+	if (sztNbrBytesRead==iStrSize) {
+		iResult= sztNbrBytesRead;
+	}
+	return (iResult);
+}
+
+
+
 void writeText(int fd, int x, int y, char * text) {
 
   char responseOled[40];
