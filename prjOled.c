@@ -204,12 +204,34 @@ int main(int iArgCount, char * apstrArgValue[]) {
       int temp3 = 1;
       while (sigFlagStop != -1) {
         
+        // max value 4052
         ReadAdcIA(cdevAdcIA0.m_iDescIo,resPoten,sizeof(resPoten));
+        //printf("%s\n",resPoten);
         
-        printf("%s\n",resPoten);
+        if (resPoten != resPotenOld){
+		      float pourcent = (float)(atoi(resPoten)-2526)/1526;
+		      
+		      
+		      //printf("%'.2f\n",pourcent);
+		      if (pourcent < -1){
+		          pourcent = -1;
+        	}
+        	write(a2iFdPipe[1],&pourcent,4);
+        		
+        	strcpy(&resPotenOld,&resPoten);
+        	
+        }
+        //printf("%s\n",resPoten);
         //if (resPoten == resPotenOld)
-
-        usleep(500);
+        
+        //int test = atoi(resPoten);
+        //printf("atoi : %i\n",test);
+        //rusleep(100000);
+        
+        
+        
+        
+        usleep(100000);
 
       }
       // when close program
@@ -226,7 +248,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
       int tempMove = 1;
       
       	
-
+			
 			printTriangle(oledScreen.m_iDescIo, 40, 40, 4);
 
       /*write(oledScreen.m_iDescIo, & moveCursor, sizeof(moveCursor));
@@ -241,7 +263,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
       writeText(oledScreen.m_iDescIo, 30, 90, "SAE");
 
-      usleep(5000000);
+      usleep(50000);
 
       //write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
       write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
@@ -250,6 +272,8 @@ int main(int iArgCount, char * apstrArgValue[]) {
       //usleep(50000);
       //read(oledScreen.m_iDescIo, & response, 1);
       fd_set readSet;
+      
+      float potenReceive = 0;
 
       while (sigFlagStop != -1) {
 
@@ -270,7 +294,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
         if (ready > 0) {
           // Data is ready to be read
-          iResult = read(a2iFdPipe[0], & buttonsStateReceive, 1);
+          iResult = read(a2iFdPipe[0], & potenReceive, 4);
           if (iResult == -1) {
             // Handle other read errors if needed
             //perror("read");
@@ -285,18 +309,23 @@ int main(int iArgCount, char * apstrArgValue[]) {
           //perror("select");
           break;
         }
-
+        
+        
+				//printf("%'.2f\n",potenReceive);
         
         CircleBlack[3] = BufferTableCircle[3];
-
-        if ((buttonsStateReceive == 1) && (x > 13)) {
-          x = x - 1;
-          tempMove = 1;
-        } else if ((buttonsStateReceive == 3) && (x < 115)) {
-          x = x + 1;
-          tempMove = 1;
-        } else {
-          tempMove = 0;
+        
+        if((x>4) && (potenReceive<0)){
+        	//printf("%'.2f\n",(2*potenReceive));
+					x = x + (2*potenReceive);
+        }
+        else if((x< 124) && (potenReceive>0)){
+        	//printf("%'.2f\n",(2*potenReceive));
+					x = x + (2*potenReceive);
+        }
+        
+        else{
+						
         }
 
         BufferTableCircle[3] = x;
