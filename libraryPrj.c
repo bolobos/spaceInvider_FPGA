@@ -52,7 +52,7 @@ int SendCommand(int fd,char *data,size_t dataSize){
    nbrOctSent = write(fd, data, dataSize);
 
    // adapted to 115200 baud
-   usleep(10000);
+   usleep(6000);
 
    returnVAlue = read(fd, & responseOled, 1);
 

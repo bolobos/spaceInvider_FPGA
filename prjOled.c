@@ -47,7 +47,16 @@ union buffer {
 };
 
 
-struct mob {
+
+
+
+
+
+
+
+
+
+      struct mob {
         int x;
         int y;
         int hp;
@@ -67,7 +76,24 @@ struct mob {
         int damage;
         int specialdamage;
         char model[];
-};
+      };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void send16bits(int iFd, union buffer data) {
   write(iFd, & data.commandStruct.dataAlone8bitsHIGH, sizeof(data.commandStruct.dataAlone8bitsHIGH));
   write(iFd, & data.commandStruct.dataAlone8bitsLOW, sizeof(data.commandStruct.dataAlone8bitsHIGH));
@@ -112,7 +138,24 @@ int main(int iArgCount, char * apstrArgValue[]) {
   memset( & dataToReceive, 0, 2);
   
   
-  struct mob TabMob[50];
+  
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+
+      struct mob TabMob[50];
       struct missile TabMissile[20];
       struct ship MasterShip;
       
@@ -177,6 +220,22 @@ int main(int iArgCount, char * apstrArgValue[]) {
       memcpy( & (MasterShip.model), & RondBasCentre, sizeof(RondBasCentre));      
       
       TabMissile[iBcl4].x = - 1; 
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
 
   // Oled screen
   struct TDevice oledScreen = {
@@ -353,9 +412,15 @@ float truncated = tmp / 10.0; // 4.4*/
       close(a2iFdPipe[1]);
       int tempMove = 1;
       
-      	
-			
-			printTriangle(oledScreen.m_iDescIo, 40, 40, 4);
+      
+      
+      
+  
+
+      
+      
+      
+			//printTriangle(oledScreen.m_iDescIo, 40, 40, 4);
 
       /*write(oledScreen.m_iDescIo, & moveCursor, sizeof(moveCursor));
       usleep(7000);
@@ -365,9 +430,10 @@ float truncated = tmp / 10.0; // 4.4*/
       write(oledScreen.m_iDescIo, & textSpaceInvider, sizeof(textSpaceInvider));
       usleep(7000);
       returnVAlue = read(oledScreen.m_iDescIo, & response, 1);*/
-      writeText(oledScreen.m_iDescIo, 20, 63, "Space Invider");
+      //writeText(oledScreen.m_iDescIo, 20, 63, "Space Invider");
 
-      writeText(oledScreen.m_iDescIo, 30, 90, "SAE");
+      //writeText(oledScreen.m_iDescIo, 30, 90, "SAE");
+
 
       usleep(50000);
 
@@ -379,20 +445,27 @@ float truncated = tmp / 10.0; // 4.4*/
       //read(oledScreen.m_iDescIo, & response, 1);
       fd_set readSet;
       
+      int tempStart = 1;
+      
+      
       float potenReceive = 0;
       
       int vitesse = 0;
-      
-
       while (sigFlagStop != -1) {
-
-        // reading of buttons states
-        /*alarm(1);
-        iResult = read(a2iFdPipe[0], &buttonsStateReceive, 1);*/
-        
-        
-        
-        gettimeofday( & Time, & Balec);
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      gettimeofday( & Time, & Balec);
           tpre = t;
           t = Time.tv_sec;
           ut = Time.tv_usec + (Time.tv_sec * 1000000);
@@ -651,6 +724,19 @@ float truncated = tmp / 10.0; // 4.4*/
             // fprintf(stdout,"Char tunning : %c\n",TabMob->model[1]);
 
           }
+      
+      
+      
+      
+      
+      
+      
+
+          
+
+         // reading of buttons states
+        /*alarm(1);
+        iResult = read(a2iFdPipe[0], &buttonsStateReceive, 1);*/
 
         FD_ZERO( & readSet);
         FD_SET(a2iFdPipe[0], & readSet);
@@ -698,9 +784,9 @@ float truncated = tmp / 10.0; // 4.4*/
 					x = x + (2*potenReceive);
         }*/
         
-				if(((xbis>8) && (potenReceive<0))||((xbis< 120) && (potenReceive>0))){
+				if(((x>8) && (potenReceive<0))||((x< 120) && (potenReceive>0))){
 					vitesse = 2*potenReceive;
-					xbis = xbis + vitesse;
+					x = x + vitesse;
 				}
 		    
 		    
@@ -712,19 +798,19 @@ float truncated = tmp / 10.0; // 4.4*/
           
           	
           	// vers la gauche
-						if ((xbis>8) && (potenReceive<0)){
+						if ((x>8) && (potenReceive<0)){
 							CircleBlack[3] = BufferTableCircle[3]+(-iBcl4+1);
 							//printf("%i\n",iBcl4);
 						}
 						// vers la droite
-						if ((xbis< 120) && (potenReceive>0)){
+						if ((x< 120) && (potenReceive>0)){
 							CircleBlack[3] = BufferTableCircle[3]-(iBcl4-1);
 						}
             SendCommand(oledScreen.m_iDescIo, & CircleBlack, sizeof(CircleBlack));
           }
 				  // modifications on the table of char
 			  	
-			  	BufferTableCircle[3] = xbis;
+			  	BufferTableCircle[3] = x;
 				  //tmp = blackRectangle;
 				  //SendCommand(oledScreen.m_iDescIo,tmp);
 				  /*printf("Etat read : %i\n",returnVAlue);
@@ -739,17 +825,12 @@ float truncated = tmp / 10.0; // 4.4*/
 				  printf("Reponse : %i\n",response);*/
 				  //tempMove = 0;
          }
-        
-        
-        
-
-        
-        
-
-
 
         //while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}
       }
+      
+      
+      
 
       // ending program
       // clear screen
