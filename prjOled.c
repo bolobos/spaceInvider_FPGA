@@ -184,6 +184,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
       int A3 = 0;
       int A4 = 0;
       int A5 = 0;
+      int A6 = 0;
       int enablemob = 0;
       int enablemiss = 0;
       unsigned long long t = 0;
@@ -214,7 +215,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
       MasterShip.specialdamage = 100;
       memcpy( & (MasterShip.model), & RondBasCentre, sizeof(RondBasCentre));      
       
-      
+      TabMissile[iBcl4].x = - 1; 
       
       
       
@@ -474,6 +475,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
             A4++;
             A1++;
             A5++;
+            A6++;
 
           }
 
@@ -483,7 +485,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
           }
 
-          if (A3 == -1) {
+          if (A3 == 5) {
             A3 = 0;
             //fprintf(stdout,"ajout mob : \n");
 
@@ -523,10 +525,10 @@ int main(int iArgCount, char * apstrArgValue[]) {
             enablemob = 1;
           }
 
-          if (A2 == -1) {
+          if (A2 == 3) {
             //fprintf(stdout,"qjout missile : \n");
             A2 = 0;
-            while ((TabMissile[iBcl3].x) != 3) {
+            while ((TabMissile[iBcl3].x) != -1) {
               iBcl3++;
             }
             //MasterShip.x =(rand()%100)+10;
@@ -549,6 +551,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
             for (iBcl4 = 0; iBcl4 < 50; iBcl4++) {
               if (A1 == 1) {
                 enablemiss = 1;
+                //fprintf(stdout, "enablemiss: \n");
                 if (iBcl4 < 20) {
                   if ((TabMissile[iBcl4].x) != -1) {
                     if (TabMissile[iBcl4].y <= 7) {
@@ -561,8 +564,8 @@ int main(int iArgCount, char * apstrArgValue[]) {
                     } else {
                       TabMissile[iBcl4].y = TabMissile[iBcl4].y - 1;
                       TabMissile[iBcl4].model[5] = TabMissile[iBcl4].y;
-                      fprintf(stdout,"Valeur X  : %i \n",TabMissile[iBcl4].model[5] );
-                      fprintf(stdout,"Avance val tableau %i : \n",iBcl4);
+                      //fprintf(stdout,"Valeur X  : %i \n",TabMissile[iBcl4].model[3]);
+                      //fprintf(stdout,"Avance val tableau %i : \n",iBcl4);
                     }
                   }
                 }
@@ -621,12 +624,13 @@ int main(int iArgCount, char * apstrArgValue[]) {
                           write(oledScreen.m_iDescIo, & RondClear, sizeof(RondClear));
                           usleep(6000);
                           TabMob[iBcl4].hp = TabMob[iBcl4].hp - TabMissile[iBcl5].damage;
+                           
                           if (TabMob[iBcl4].hp == 100) {
                             TabMob[iBcl4].model[8] = 0xFF;
-                            TabMob[iBcl4].model[9] = 0xE0;
+                            TabMob[iBcl4].model[9] = 0xE0;                            
                           } else {
-                            TabMob[iBcl2].model[8] = 0x07;
-                            TabMob[iBcl2].model[9] = 0xE0;
+                            TabMob[iBcl4].model[8] = 0x07;
+                            TabMob[iBcl4].model[9] = 0xE0;                           
                           }
                           TabMissile[iBcl5].x = -1;
                         }
@@ -642,7 +646,8 @@ int main(int iArgCount, char * apstrArgValue[]) {
             iBcl4 = 0;
             if (A5 == 1) {
               A5 = 0;
-            } else if (A1 == 1) {
+            } 
+             if (A1 == 1) {
               A1 = 0;
             }
 
@@ -658,7 +663,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
           int iReceive = 0;
           int c = 0;
 
-          if (enablemob == 1) {
+          if (enablemob == 1) { // A résoudre 
             enablemob = 0;
             for (int f = 0; f < 50; f++) {
               if ((TabMob[f].x) != -1) {
@@ -765,7 +770,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
         
         BufferTableCircleBlack[3] = BufferTableCircle[3];
 
-        if ((buttonsStateReceive == 1) && (xbis > 13)) {
+        if ((buttonsStateReceive == 5) && (xbis > 13)) {
           xbis = xbis - 2;
           tempMove = 1;
         } else if ((buttonsStateReceive == 3) && (x < 115)) {
@@ -788,6 +793,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
 
         // execute the reset only if event occur
         if (tempMove == 1) {
+          
           // modifications on the table of char
           SendCommand(oledScreen.m_iDescIo, & BufferTableCircleBlack, sizeof(BufferTableCircleBlack));
           //tmp = blackRectangle;
@@ -802,11 +808,14 @@ int main(int iArgCount, char * apstrArgValue[]) {
           /*printf("Nbr octets envoyés : %i\n",nbrOctSent);
           printf("Nbr octets recu : %i\n",returnVAlue);
           printf("Reponse : %i\n",response);*/
-
+         
         }
 
         //while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}
       }
+      
+      
+      
 
       // ending program
       // clear screen
