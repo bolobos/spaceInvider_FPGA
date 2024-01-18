@@ -55,7 +55,7 @@ int response;
 int returnVAlue;
 int nbrOctSent;
 char* resPoten[10];
-char* resPotenOld[10];
+float resPotenOld;
 
 
 int main(int iArgCount, char * apstrArgValue[]) {
@@ -202,24 +202,41 @@ int main(int iArgCount, char * apstrArgValue[]) {
       int temp = 0;
       int temp2 = 0;
       int temp3 = 1;
+      float pourcent = 0;
+      char* tempString[10];
       while (sigFlagStop != -1) {
         
         // max value 4052
         ReadAdcIA(cdevAdcIA0.m_iDescIo,resPoten,sizeof(resPoten));
         //printf("%s\n",resPoten);
         
-        if (resPoten != resPotenOld){
-		      float pourcent = (float)(atoi(resPoten)-2526)/1526;
+        pourcent = (float)(atoi(resPoten)-2526)/1526;
+        sprintf(tempString, "%.*f", 2, pourcent);
+        pourcent = atof(tempString);
+        
+        //printf("pourcent : %f\n",pourcent);
+        
+        
+        /*float original = 4.48;
+
+int tmp = original * 10; // 44.8 truncated to 44
+
+float truncated = tmp / 10.0; // 4.4*/
+
+	      if (pourcent < -1){
+	          pourcent = -1;
+      	}
+
+        
+        if (pourcent != resPotenOld){
 		      
 		      
 		      //printf("%'.2f\n",pourcent);
-		      if (pourcent < -1){
-		          pourcent = -1;
-        	}
+
         	write(a2iFdPipe[1],&pourcent,4);
         		
-        	strcpy(&resPotenOld,&resPoten);
-        	
+        	resPotenOld = pourcent;
+        	//printf("pourcent : %f\n",pourcent);
         }
         //printf("%s\n",resPoten);
         //if (resPoten == resPotenOld)
@@ -274,6 +291,9 @@ int main(int iArgCount, char * apstrArgValue[]) {
       fd_set readSet;
       
       float potenReceive = 0;
+      
+      int vitesse = 0;
+      
 
       while (sigFlagStop != -1) {
 
@@ -288,7 +308,9 @@ int main(int iArgCount, char * apstrArgValue[]) {
         struct timeval timeout;
         timeout.tv_sec = 0;
         timeout.tv_usec = 50;
-
+        
+				tempMove = 1;
+				
         // Use select to check for readability with zero timeout
         int ready = select(a2iFdPipe[0] + 1, & readSet, NULL, NULL, & timeout);
 
@@ -304,6 +326,7 @@ int main(int iArgCount, char * apstrArgValue[]) {
           // Process the read data if needed
         } else if (ready == 0) {
           // No data available, do something else or continue the loop
+          //tempMove = 0;
         } else {
           // Handle select error
           //perror("select");
@@ -313,41 +336,66 @@ int main(int iArgCount, char * apstrArgValue[]) {
         
 				//printf("%'.2f\n",potenReceive);
         
-        CircleBlack[3] = BufferTableCircle[3];
         
-        if((x>4) && (potenReceive<0)){
+        
+        /*if((x>8) && (potenReceive<0)){
         	//printf("%'.2f\n",(2*potenReceive));
 					x = x + (2*potenReceive);
         }
-        else if((x< 124) && (potenReceive>0)){
+        else if((x< 120) && (potenReceive>0)){
         	//printf("%'.2f\n",(2*potenReceive));
 					x = x + (2*potenReceive);
-        }
+        }*/
         
-        else{
-						
-        }
+				if(((x>8) && (potenReceive<0))||((x< 120) && (potenReceive>0))){
+					vitesse = 2*potenReceive;
+					x = x + vitesse;
+				}
+		    
+		    
+		    
+		    if (vitesse !=0){
+		    
+		    	
+          for (int iBcl4 = 1;iBcl4<=abs(vitesse);iBcl4++){
+          
+          	
+          	// vers la gauche
+						if ((x>8) && (potenReceive<0)){
+							CircleBlack[3] = BufferTableCircle[3]+(-iBcl4+1);
+							//printf("%i\n",iBcl4);
+						}
+						// vers la droite
+						if ((x< 120) && (potenReceive>0)){
+							CircleBlack[3] = BufferTableCircle[3]-(iBcl4-1);
+						}
+            SendCommand(oledScreen.m_iDescIo, & CircleBlack, sizeof(CircleBlack));
+          }
+				  // modifications on the table of char
+			  	
+			  	BufferTableCircle[3] = x;
+				  //tmp = blackRectangle;
+				  //SendCommand(oledScreen.m_iDescIo,tmp);
+				  /*printf("Etat read : %i\n",returnVAlue);
+				  printf("Reponse : %i\n",response);*/
 
-        BufferTableCircle[3] = x;
+				  // sending command to display main  character
+				  SendCommand(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
+				  //tmp = BufferTableCircle;
+				  //SendCommand(oledScreen.m_iDescIo,tmp);
+				  /*printf("Nbr octets envoyés : %i\n",nbrOctSent);
+				  printf("Nbr octets recu : %i\n",returnVAlue);
+				  printf("Reponse : %i\n",response);*/
+				  //tempMove = 0;
+         }
+        
+        
+        
 
-        // execute the reset only if event occur
-        if (tempMove == 1) {
-          // modifications on the table of char
-          SendCommand(oledScreen.m_iDescIo, & CircleBlack, sizeof(CircleBlack));
-          //tmp = blackRectangle;
-          //SendCommand(oledScreen.m_iDescIo,tmp);
-          /*printf("Etat read : %i\n",returnVAlue);
-          printf("Reponse : %i\n",response);*/
+        
+        
 
-          // sending command to display main  character
-          SendCommand(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
-          //tmp = BufferTableCircle;
-          //SendCommand(oledScreen.m_iDescIo,tmp);
-          /*printf("Nbr octets envoyés : %i\n",nbrOctSent);
-          printf("Nbr octets recu : %i\n",returnVAlue);
-          printf("Reponse : %i\n",response);*/
 
-        }
 
         //while((difftime( time( NULL ), 0 ) - oldSeconds) < 1){}
       }
