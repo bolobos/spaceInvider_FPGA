@@ -17,7 +17,7 @@ extern char BufferTable[12] = {
  0x11
 };
 // rayon : 6
-extern char BufferTableCircle[12] = {
+extern char BufferTableCircle[10] = {
  0xFF,
  0xCC,
  0x00,
@@ -29,7 +29,7 @@ extern char BufferTableCircle[12] = {
  0x84,
  0xFF
 };
-extern char BufferTableCircleBlack[12] = {
+extern char BufferTableCircleBlack[10] = {
  0xFF,
  0xCC,
  0x00,
@@ -161,4 +161,7 @@ extern      char Rond[12] = {
         0x10
       };
 
+extern char CircleBlack[] = {
+ 0xFF, 0xCD, 0x00, 0x2D, 0x00, 0x78, 0x00, 0x06, 0x00, 0x00
+};
 

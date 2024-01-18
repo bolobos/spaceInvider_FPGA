@@ -63,6 +63,8 @@ int SendCommand(int fd,char *data,size_t dataSize);
 
 void writeText(int fd, int x, int y, char * text);
 
+void printTriangle(int fd, int x, int y, int taille);
+
 
 //void InitOled(int fd, termios *termiosOled);
 
@@ -72,8 +74,8 @@ void writeText(int fd, int x, int y, char * text);
 
 extern char BufferTable[12];
 // rayon : 6
-extern char BufferTableCircle[12];
-extern char BufferTableCircleBlack[12];
+extern char BufferTableCircle[10];
+extern char BufferTableCircleBlack[10];
 
 
 
@@ -81,6 +83,7 @@ extern char printChar[4];
 
 extern char moveOrigin[6];
 
+extern char CircleBlack[10];
 
 
 extern char Triangle[16];
