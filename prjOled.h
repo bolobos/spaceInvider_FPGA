@@ -31,6 +31,7 @@
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include <time.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -87,6 +88,16 @@ extern char CircleBlack[10];
 
 
 extern char Triangle[16];
+
+
+extern      char Rond[12];
+   extern   char RondClear[12];
+   extern   char RondHaut[12];
+    extern  char RondBas[12];
+   extern   char RondBasDecale[12];
+     extern char RondBasCentre[12];
+
+   extern   char blackRectangle[12];
 
 extern char clearScreen[2];
 extern char setBaudRate[4];
