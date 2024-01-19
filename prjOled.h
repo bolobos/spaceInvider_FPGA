@@ -60,11 +60,18 @@ void InitComp(void);
 
 size_t DateLocale(const char strFormatDate[], char strDate[],size_t sztTaillestrDate);
 
-int SendCommand(int fd,char *data,size_t dataSize);
+int SendCommand(int fd,char *data,size_t dataSize,int time);
 
-void writeText(int fd, int x, int y, char * text);
+void writeText(int fd, int x, int y, char * text,size_t size);
 
 void printTriangle(int fd, int x, int y, int taille);
+
+void logoPrint(int fd,char table[8][11] ,int x, int y);
+
+void writeTextEvolve(int fd, int x, int y, char * text, size_t size);
+
+
+
 
 
 //void InitOled(int fd, termios *termiosOled);
@@ -89,6 +96,8 @@ extern char CircleBlack[10];
 
 extern char Triangle[16];
 
+extern char Pixel[8];
+
 
 extern      char Rond[12];
    extern   char RondClear[12];
@@ -102,17 +111,17 @@ extern      char Rond[12];
 extern char clearScreen[2];
 extern char setBaudRate[4];
 
+extern char screenTimeout[4];
+extern char screenSpeed[4];
 
-extern      char Rond[12];
-   extern   char RondClear[12];
-   extern   char RondHaut[12];
-    extern  char RondBas[12];
-   extern   char RondBasDecale[12];
-     extern char RondBasCentre[12];
+extern char textColor[4];
 
-   extern   char blackRectangle[12];
-   
-   
+extern char characterHeight[4];
+
+extern char characterWidth[4];
+
+extern char backgroundColor[4];
+   extern char textBackground[4];
   
 #endif // #if !defined __PRJOLED_H__
 

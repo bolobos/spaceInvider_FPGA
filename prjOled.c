@@ -352,7 +352,54 @@ int main(int iArgCount, char * apstrArgValue[]) {
       int temp3 = 1;
       float pourcent = 0;
       char* tempString[10];
+      char* stringButton[2];
+      int concatenateData = 0;
+      char * concatenateString[20];
       while (sigFlagStop != -1) {
+      
+      
+      
+      // polling on two buttons
+        poll( & gpioButton1.m_pollfd[1], 1, 100);
+        poll( & gpioButton1.m_pollfd[0], 1, 100);
+
+        // press the button 1
+        if (gpioButton1.m_pollfd[1].revents == gpioButton1.m_pollfd[1].events) {
+          read(gpioButton1.m_event_request[1].fd, & (gpioButton1.m_event_data[1]), sizeof(gpioButton1.m_event_data[1]));
+          //fprintf(stdout, "Bouton 1\n");
+          if (temp == 0) {
+            temp = 1;
+            //fprintf(stdout, "1\n");
+            buttonsState1 = 1;
+          } else {
+            temp = 0;
+
+            buttonsState1 = 2;
+            //fprintf(stdout, "2\n");
+          }
+          /*if (temp3 == 0) {
+            write(a2iFdPipe[1], & buttonsState1, 1);
+            //fprintf(stdout,"Send : %i\n",buttonsState1);
+          }*/
+
+        }
+
+        // press the button 2
+        if (gpioButton1.m_pollfd[0].revents == gpioButton1.m_pollfd[0].events) {
+          read(gpioButton1.m_event_request[0].fd, & (gpioButton1.m_event_data[0]), sizeof(gpioButton1.m_event_data[0]));
+          
+          if (temp2 == 0) {
+            temp2 = 1;
+            buttonsState2 = 3;
+            //fprintf(stdout, "3\n");
+          } else {
+            temp2 = 0;
+						//fprintf(stdout, "4\n");
+            buttonsState2 = 4;
+
+          }
+          
+          }
         
         // max value 4052
         ReadAdcIA(cdevAdcIA0.m_iDescIo,resPoten,sizeof(resPoten));
@@ -374,18 +421,18 @@ float truncated = tmp / 10.0; // 4.4*/
 	      if (pourcent < -1){
 	          pourcent = -1;
       	}
+      	
+      	
+				//sprintf(stringButton, "%i", buttonsState1);
+				
+				// concatenate datas
+				/*strcpy(&concatenateString,&tempString);
+				strcat(&concatenateString,".");
+				strcat(&concatenateString,&stringButton);*/
+				
+				
+        concatenateData = (100+pourcent*100) + buttonsState1*100000;
 
-        
-        if (pourcent != resPotenOld){
-		      
-		      
-		      //printf("%'.2f\n",pourcent);
-
-        	write(a2iFdPipe[1],&pourcent,4);
-        		
-        	resPotenOld = pourcent;
-        	//printf("pourcent : %f\n",pourcent);
-        }
         //printf("%s\n",resPoten);
         //if (resPoten == resPotenOld)
         
@@ -394,9 +441,23 @@ float truncated = tmp / 10.0; // 4.4*/
         //rusleep(100000);
         
         
+        if ((pourcent != resPotenOld) || (buttonsState1 != buttonsState1Old)){
+        
+      		//printf("String : %s\n",concatenateString);
+        	write(a2iFdPipe[1],&concatenateData,4);
+        	//printf("DATA : %i\n",concatenateData);
+        
+        }
         
         
-        usleep(100000);
+        if (pourcent != resPotenOld){
+        	resPotenOld = pourcent;
+        }
+        if (buttonsState1 != buttonsState1Old){
+        	buttonsState1Old = buttonsState1;
+        }
+        
+        usleep(10000);
 
       }
       // when close program
@@ -412,30 +473,117 @@ float truncated = tmp / 10.0; // 4.4*/
       close(a2iFdPipe[1]);
       int tempMove = 1;
       
+      //SendCommand(oledScreen.m_iDescIo,&clearScreen,sizeof(clearScreen),100000);
       
       
+      char logo[8][11] = {{0,0,1,0,0,0,0,0,1,0,0},{0,0,0,1,0,0,0,1,0,0,0},{0,0,1,1,1,1,1,1,1,0,0},{0,1,1,0,1,1,1,0,1,1,0},{1,1,1,1,1,1,1,1,1,1,1},{1,0,1,1,1,1,1,1,1,0,1},{1,0,1,0,0,0,0,0,1,0,1},{0,0,0,1,1,0,1,1,0,0,0}};
+      backgroundColor[2] = 0x50;
+      backgroundColor[3] = 0xDE;
+      SendCommand(oledScreen.m_iDescIo,&backgroundColor,sizeof(backgroundColor),100000);
+      write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
+      usleep(50000);
+      read(oledScreen.m_iDescIo, & response, 1);
       
-  
+  	//logoPrint(oledScreen.m_iDescIo,logo, 20, 20);
 
-      
-      
-      
 			//printTriangle(oledScreen.m_iDescIo, 40, 40, 4);
-
-      /*write(oledScreen.m_iDescIo, & moveCursor, sizeof(moveCursor));
-      usleep(7000);
-      returnVAlue = read(oledScreen.m_iDescIo, & response, 1);
 			
+			
+			textColor[2] = 248;
+			textColor[3] = 64;
+      textBackground[2] = 0x50;
+      textBackground[3] = 0xDE;
+      SendCommand(oledScreen.m_iDescIo,&textBackground,sizeof(textBackground),5000);
+			SendCommand(oledScreen.m_iDescIo,&textColor,sizeof(textColor),5000);
+			SendCommand(oledScreen.m_iDescIo,&characterHeight,sizeof(characterHeight),5000);
+			SendCommand(oledScreen.m_iDescIo,&characterWidth,sizeof(characterWidth),5000);
+			
+			printf("Aye\n");
+      sleep(1);
+      enum trajLogo{
+        DROIT,
+        BAS,
+        GAUCHE,
+        HAUT
+      };
+
+      int etat = DROIT;
+      int xLogo = 10;
+      int yLogo = 20;
+      blackRectangle[10] = 0x50;
+      blackRectangle[11] = 0xDE;
+
+      for(int iBcl8=0;iBcl8 < 100;iBcl8++){
+        textColor[2] = 0+iBcl8;
+        textColor[3] = 10+iBcl8;
+        blackRectangle[3] = xLogo;
+        blackRectangle[5] = yLogo;
+        blackRectangle[7] = xLogo+11;
+        blackRectangle[9] = yLogo+8;
+        SendCommand(oledScreen.m_iDescIo, & blackRectangle, sizeof(blackRectangle),7000);
+        SendCommand(oledScreen.m_iDescIo,&textColor,sizeof(textColor),6000);
+        writeText(oledScreen.m_iDescIo, 20, 30, "Space Invider",sizeof("Space Invider"));
+        
+        writeText(oledScreen.m_iDescIo, 50, 40, "SAE",sizeof("SAE"));
+        
+        switch (etat) {
+        case DROIT:
+          // code block
+          xLogo = xLogo +2;
+          if (iBcl8 > 40){
+            etat = BAS;
+          }
+          break;
+        case BAS:
+          // code block
+          yLogo = yLogo +3;
+          if (iBcl8 > 50){
+            etat = GAUCHE;
+          }
+          break;
+        case GAUCHE:
+          // code block
+          xLogo = xLogo -2;
+          if (iBcl8 > 90){
+            etat = HAUT;
+          }
+          break;
+        case HAUT:
+          yLogo = yLogo - 3;
+          // code block
+
+          break;
+        default:
+          // code block
+        }
+        logoPrint(oledScreen.m_iDescIo,logo, xLogo, yLogo);
+
+
+        
+      }
+      writeText(oledScreen.m_iDescIo, 20, 30, "Space Invider",sizeof("Space Invider"));
+      sleep(1);
+
+
+      writeText(oledScreen.m_iDescIo, 20, 40, "SAE",sizeof("SAE"));
+
+      /*writeTextEvolve(oledScreen.m_iDescIo, 20, 30, "Space Invider",sizeof("Space invider"));
+      sleep(1);
+
+
+      writeTextEvolve(oledScreen.m_iDescIo, 50, 50, "SAE",sizeof("SAE"));*/
+
       
-      write(oledScreen.m_iDescIo, & textSpaceInvider, sizeof(textSpaceInvider));
-      usleep(7000);
-      returnVAlue = read(oledScreen.m_iDescIo, & response, 1);*/
+
       //writeText(oledScreen.m_iDescIo, 20, 63, "Space Invider");
+      
+      /*SendCommand(oledScreen.m_iDescIo,&screenTimeout,sizeof(screenTimeout),100000);
+      SendCommand(oledScreen.m_iDescIo,&screenSpeed,sizeof(screenTimeout),50000);*/
 
       //writeText(oledScreen.m_iDescIo, 30, 90, "SAE");
+			
 
-
-      usleep(50000);
+      usleep(5000000);
 
       //write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
       write(oledScreen.m_iDescIo, & clearScreen, sizeof(clearScreen));
@@ -445,10 +593,17 @@ float truncated = tmp / 10.0; // 4.4*/
       //read(oledScreen.m_iDescIo, & response, 1);
       fd_set readSet;
       
-      int tempStart = 1;
+      int tempStart = 1; 
       
       
-      float potenReceive = 0;
+      char * receiveString[20];
+      
+      
+      int receiveData;
+      
+      float valPoten = 0;
+      char* valPotenTemp[6];
+      int valButton = 0;
       
       int vitesse = 0;
       while (sigFlagStop != -1) {
@@ -602,7 +757,7 @@ float truncated = tmp / 10.0; // 4.4*/
                             TabMissile[iBcl5].model[5] = TabMissile[iBcl5].y + 1;
                           }
 
-                          RondClear[3] = TabMissile[iBcl5].model[3];SendCommand(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
+                          RondClear[3] = TabMissile[iBcl5].model[3];SendCommand(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle),5000);
                           RondClear[5] = TabMissile[iBcl5].model[5];
                           //fprintf(stdout, "clear X : %i \n", RondClear[3]);
                           //fprintf(stdout, "clear Y : %i \n", RondClear[5]);
@@ -732,8 +887,6 @@ float truncated = tmp / 10.0; // 4.4*/
       
       
 
-          
-
          // reading of buttons states
         /*alarm(1);
         iResult = read(a2iFdPipe[0], &buttonsStateReceive, 1);*/
@@ -753,7 +906,7 @@ float truncated = tmp / 10.0; // 4.4*/
 
         if (ready > 0) {
           // Data is ready to be read
-          iResult = read(a2iFdPipe[0], & potenReceive, 4);
+          iResult = read(a2iFdPipe[0], & receiveData, 4);
           if (iResult == -1) {
             // Handle other read errors if needed
             //perror("read");
@@ -769,7 +922,23 @@ float truncated = tmp / 10.0; // 4.4*/
           //perror("select");
           break;
         }
+              //float valPoten = 0;
+      //int valButton = 0;
         
+        
+        // decontatenate
+        
+        
+        
+        
+        
+        pourcent = atof(tempString);
+        
+      	valButton = receiveData/100000;
+        valPoten = (receiveData-(valButton*100000)-100)/100.0;
+        //printf("Bouton : %i\n",valButton);
+        //printf("Poten : %f\n",valPoten);
+        //printf("BOUTON : %i\n",receiveData);
         
 				//printf("%'.2f\n",potenReceive);
         
@@ -784,9 +953,9 @@ float truncated = tmp / 10.0; // 4.4*/
 					x = x + (2*potenReceive);
         }*/
         
-				if(((x>8) && (potenReceive<0))||((x< 120) && (potenReceive>0))){
-					vitesse = 2*potenReceive;
-					x = x + vitesse;
+				if(((xbis>8) && (valPoten<0))||((xbis< 120) && (valPoten>0))){
+					vitesse = 2*valPoten;
+					xbis = xbis + vitesse;
 				}
 		    
 		    
@@ -798,26 +967,26 @@ float truncated = tmp / 10.0; // 4.4*/
           
           	
           	// vers la gauche
-						if ((x>8) && (potenReceive<0)){
+						if ((xbis>8) && (valPoten<0)){
 							CircleBlack[3] = BufferTableCircle[3]+(-iBcl4+1);
 							//printf("%i\n",iBcl4);
 						}
 						// vers la droite
-						if ((x< 120) && (potenReceive>0)){
+						if ((xbis< 120) && (valPoten>0)){
 							CircleBlack[3] = BufferTableCircle[3]-(iBcl4-1);
 						}
-            SendCommand(oledScreen.m_iDescIo, & CircleBlack, sizeof(CircleBlack));
+            SendCommand(oledScreen.m_iDescIo, & CircleBlack, sizeof(CircleBlack),5000);
           }
 				  // modifications on the table of char
 			  	
-			  	BufferTableCircle[3] = x;
+			  	BufferTableCircle[3] = xbis;
 				  //tmp = blackRectangle;
 				  //SendCommand(oledScreen.m_iDescIo,tmp);
 				  /*printf("Etat read : %i\n",returnVAlue);
 				  printf("Reponse : %i\n",response);*/
 
 				  // sending command to display main  character
-				  SendCommand(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle));
+				  SendCommand(oledScreen.m_iDescIo, & BufferTableCircle, sizeof(BufferTableCircle),5000);
 				  //tmp = BufferTableCircle;
 				  //SendCommand(oledScreen.m_iDescIo,tmp);
 				  /*printf("Nbr octets envoyés : %i\n",nbrOctSent);
